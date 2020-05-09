@@ -1,52 +1,49 @@
 <template>
   <div id="app">
-    <Header v-if="loadcompleted" :ur="CurrentUserRoles"  @logout="clearroles"/>
-    <router-view :dir="direction" :ta="textalign" />
-   
+    <Header v-if="loadcompleted" :ur="CurrentUserRoles" @logout="clearroles" />
+    <router-view
+      v-if="loadcompleted"
+      :dir="direction"
+      :ta="textalign"
+      :ur="CurrentUserRoles"
+    />
   </div>
 </template>
 <script>
-document.title = 'Taboor';
-import Header from './components/Header.vue'
-
-// import firebase from "./firebaseConfig.js";
-//const db = firebase.firestore();
+document.title = "Taboor";
+import Header from "./components/Header.vue";
+import firebase from "./firebaseConfig.js";
+const db = firebase.firestore();
 
 export default {
-  name: 'app',
+  name: "app",
   components: {
     Header
   },
   data() {
     return {
-      CurrentUserRoles: {},
+      // authUser: "",
+      CurrentUserRoles: "",
       //AllUsers: {},
       loadcompleted: false,
-      direction: 'rtl',
-      textalign: 'right',
+      direction: "rtl",
+      textalign: "right"
     };
   },
   methods: {
-     clearroles(){
-
-     },
-
-    // async getUsers() {
-    // const snapshot = await firebase.firestore().collection('users').get()
-    // return snapshot.docs.map(doc => doc.data());
-    // }
+    clearroles() {}
   },
-  beforeCreate () {
-
-  },
-  created () {
-    this.loadcompleted = true;
-    // var frankDocRef = db.collection("users");
-    // frankDocRef.add({
-    //     name: "Frank",
-    //     email: "frank@karma.ly"
-    // });        
-    
+  beforeCreate() {},
+  created() {
+    firebase.auth().onAuthStateChanged(user => {
+      db.collection("users")
+        .doc(user.uid)
+        .onSnapshot(doc => {
+          this.CurrentUserRoles = doc.data();
+          this.CurrentUserRoles.uid = user.uid;
+          this.loadcompleted = true;
+        });
+    });
     /*
     db.collection("users").add({
     first: "Ada",
@@ -78,19 +75,15 @@ export default {
     //     console.log(error);
     // });
 
-  // db.collection("users")
-  //   .onSnapshot(function(doc) {
-  //        console.log("Current data: ", doc.data());
-  //       //this.AllUsers = doc.data();
-  //   });
-  //this.AllUsers = this.getUsers();
-   
+    // db.collection("users")
+    //   .onSnapshot(function(doc) {
+    //        console.log("Current data: ", doc.data());
+    //       //this.AllUsers = doc.data();
+    //   });
+    //this.AllUsers = this.getUsers();
   },
-  watch: {
-    
-  } 
-       
-}
+  watch: {}
+};
 </script>
 <style>
 #app {

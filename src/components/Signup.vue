@@ -35,7 +35,8 @@
               <b-form-input
                 id="input-1"
                 v-model="email"
-                type="text"
+                type="email"
+                dir="ltr"
                 required
                 placeholder="البريد الالكتروني للفرع"
               ></b-form-input>
@@ -55,6 +56,8 @@
                 id="input-2"
                 v-model="password"
                 type="password"
+                dir="ltr"
+                min="6"
                 required
                 placeholder="كلمة مرور تتكون من اكثر من 6 حروف او ارقام"
               ></b-form-input>
@@ -86,7 +89,6 @@
 <script>
 import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
-require("firebase/auth");
 
 export default {
   props: ["dir", "ta"],
@@ -99,48 +101,42 @@ export default {
       error: "",
       dismissSecs: 5,
       dismissCountDown: 0,
-      show: true,
+      show: true
     };
   },
+  mounted() {},
   methods: {
     signUP: function() {
       //this.name =  this.name.replace(/(^\w{1})|(\s{1}\w{1})/g, match => match.toUpperCase());
+      /*
+db.collection("users")
+  .add({
+    displayName: this.name,
+    email: this.email,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+  })
+*/
 
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.email, this.password)
-        .then((created) => {
-          created.user.sendEmailVerification().then(() => {
-            created.user
-              .updateProfile({
-                //Update the user name in Auth
-                displayName: this.name,
-              })
-              .then(() => {
-                /*
-                    firebase.database().ref('users').child(created.user.uid)
-                    .update({displayName: this.name, email: this.email, createdAt: firebase.database.ServerValue.TIMESTAMP})//create user in users table
-                    .then(() => {
-                      //First time user
-                      this.$router.push('Profile');
-                    });
-                    */
-
-                db.collection("users")
-                  .add({
-                    displayName: this.name,
-                    email: this.email,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                    lastLogin: firebase.database.ServerValue.TIMESTAMP,
-                  })
-                  .then(() => {
-                    //First time user
-                    this.$router.push("Profile");
-                  });
-              });
-          });
+        .then(created => {
+          // console.log(created);
+          db.collection("users")
+            .doc(created.user.uid)
+            .set({
+              displayName: this.name,
+              email: this.email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+              //First time user
+              this.$router.push("Profile");
+            });
         })
-        .catch((error) => {
+        .catch(error => {
           //this.errors.push(error.message);
           this.error = error.message;
           this.showAlert();
@@ -151,8 +147,12 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    },
+    }
   },
+  beforeCreate() {},
+  created() {
+    //console.log(firebase.firestore.Timestamp.now().seconds);
+  }
 };
 </script>
 <style scoped>
@@ -166,6 +166,7 @@ h3 {
 input {
   margin: 10px 0;
   padding: 15px;
+  text-align: center;
 }
 button {
   margin-top: 20px;
