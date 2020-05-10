@@ -65,7 +65,6 @@ export default {
         .signOut()
         .then(() => {
           firebase.auth().onAuthStateChanged(() => {
-            window.location.reload();
             this.$router.push({ name: "Login", query: {} });
             this.$emit("logout");
           });

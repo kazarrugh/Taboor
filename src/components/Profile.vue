@@ -313,7 +313,7 @@ export default {
       setTimeout(() => {
         db.collection("users")
           .doc(this.ur.uid)
-          .set({
+          .update({
             logo: filepath,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
@@ -405,7 +405,7 @@ export default {
     updateProfileDetails() {
       db.collection("users")
         .doc(this.ur.uid)
-        .set({
+        .update({
           displayName: this.form.displayName,
           email: this.form.email,
           phoneNumber: this.form.phoneNumber,

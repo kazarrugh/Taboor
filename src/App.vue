@@ -28,29 +28,58 @@ export default {
       loadcompleted: false,
       direction: "rtl",
       textalign: "right",
+      loggedin: "",
     };
   },
   methods: {
     clearroles() {
       this.CurrentUserRoles = {};
-      // window.location.reload();
+      this.loggedin(); //Important
+    },
+    logout() {
+      //TEMPORARY HERE
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          firebase.auth().onAuthStateChanged(() => {
+            this.$router.push({ name: "Login", query: {} });
+          });
+        });
     },
   },
   beforeCreate() {},
   created() {
+    console.log("created");
+    if (this.$route.path == "/logout") {
+      this.logout();
+    }
+    /*
+For testing only
+    db.collection("users")
+      .doc("H0ddTQZWpuTArmpZDv74sguZyi63")
+      .get()
+      .then((doc) => {
+        console.log("onSnapshot", doc.data());
+      });
+*/
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        //console.log(user);
-        db.collection("users")
+        //console.log("Logged in user ", user.uid);
+        this.loggedin = db
+          .collection("users")
           .doc(user.uid)
-          .onSnapshot((doc) => {
-            this.CurrentUserRoles = doc.data();
-            this.CurrentUserRoles.uid = user.uid;
-            this.loadcompleted = true;
-          });
-        // .catch((error) => {
-        //   console.log(error);
-        // });
+          .onSnapshot(
+            (doc) => {
+              //console.log("onSnapshot", doc.data());
+              this.CurrentUserRoles = doc.data();
+              this.CurrentUserRoles.uid = user.uid;
+              this.loadcompleted = true;
+            },
+            function(error) {
+              console.log(error);
+            }
+          );
       } else {
         if (this.$route.path != "/Login") {
           var referrer = this.$router.history.current.fullPath;
@@ -100,7 +129,7 @@ export default {
     .catch(function(error) {
         console.error("Error adding document: ", error);
     });
-    
+
     //Read Data
     db.collection("users").get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {

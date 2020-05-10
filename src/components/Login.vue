@@ -63,7 +63,7 @@
             >تسجيل الدخول</b-button
           >
           <p style="font-size:16px;">
-            لا تملك حساب؟ يمكنك انشاء حساب جديد للفرع المقدم الخدمة
+            لا تملك حساب؟ يمكنك انشاء حساب جديد للفرع مقدم الخدمة
             <router-link :to="'/Signup?redirect=' + this.$route.query.redirect"
               >من هنا</router-link
             >
@@ -104,7 +104,7 @@ export default {
           //Update Last Login Time
           db.collection("users")
             .doc(loggedin.user.uid)
-            .set({
+            .update({
               lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             });
           this.loginbuttondisabled = true;
