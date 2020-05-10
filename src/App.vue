@@ -18,32 +18,76 @@ const db = firebase.firestore();
 export default {
   name: "app",
   components: {
-    Header
+    Header,
   },
   data() {
     return {
       // authUser: "",
-      CurrentUserRoles: "",
+      CurrentUserRoles: {},
       //AllUsers: {},
       loadcompleted: false,
       direction: "rtl",
-      textalign: "right"
+      textalign: "right",
     };
   },
   methods: {
-    clearroles() {}
+    clearroles() {
+      this.CurrentUserRoles = {};
+      // window.location.reload();
+    },
   },
   beforeCreate() {},
   created() {
-    firebase.auth().onAuthStateChanged(user => {
-      db.collection("users")
-        .doc(user.uid)
-        .onSnapshot(doc => {
-          this.CurrentUserRoles = doc.data();
-          this.CurrentUserRoles.uid = user.uid;
-          this.loadcompleted = true;
-        });
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        //console.log(user);
+        db.collection("users")
+          .doc(user.uid)
+          .onSnapshot((doc) => {
+            this.CurrentUserRoles = doc.data();
+            this.CurrentUserRoles.uid = user.uid;
+            this.loadcompleted = true;
+          });
+        // .catch((error) => {
+        //   console.log(error);
+        // });
+      } else {
+        if (this.$route.path != "/Login") {
+          var referrer = this.$router.history.current.fullPath;
+          this.$router.push({ name: "Login", query: { redirect: referrer } });
+        }
+        this.loadcompleted = true;
+      }
     });
+    /*
+    firebase
+      .auth()
+      .signOut()
+      .then(() => {
+        firebase.auth().onAuthStateChanged(() => {
+          this.$router.push({ name: "Login", query: {} });
+          this.$emit("logout");
+        });
+      });
+      */
+    /*
+    db.collection("users")
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          console.log(`${doc.id} => ${doc.data()}`);
+        });
+      });
+    firebase
+      .auth()
+      .signOut()
+      .then(() => {
+        firebase.auth().onAuthStateChanged(() => {
+          this.$router.push({ name: "Login", query: {} });
+          this.$emit("logout");
+        });
+      });
+*/
     /*
     db.collection("users").add({
     first: "Ada",
@@ -82,7 +126,7 @@ export default {
     //   });
     //this.AllUsers = this.getUsers();
   },
-  watch: {}
+  watch: {},
 };
 </script>
 <style>

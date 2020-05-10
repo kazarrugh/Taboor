@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-container class="Logincontainer" :dir="dir">
+    <b-container class="container" :dir="dir">
       <b-form v-if="show">
         <h3>نموذج التسجيل</h3>
 
@@ -101,42 +101,37 @@ export default {
       error: "",
       dismissSecs: 5,
       dismissCountDown: 0,
-      show: true
+      show: true,
     };
   },
   mounted() {},
   methods: {
     signUP: function() {
       //this.name =  this.name.replace(/(^\w{1})|(\s{1}\w{1})/g, match => match.toUpperCase());
-      /*
-db.collection("users")
-  .add({
-    displayName: this.name,
-    email: this.email,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-  })
-*/
-
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.email, this.password)
-        .then(created => {
-          // console.log(created);
+        .then((created) => {
+          //console.log(created.user.uid);
           db.collection("users")
             .doc(created.user.uid)
             .set({
               displayName: this.name,
               email: this.email,
+              phoneNumber: null,
+              opentime: null,
+              closetime: null,
+              servicetype: null,
+              coordinates: null,
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             })
             .then(() => {
               //First time user
               this.$router.push("Profile");
             });
         })
-        .catch(error => {
+        .catch((error) => {
           //this.errors.push(error.message);
           this.error = error.message;
           this.showAlert();
@@ -147,19 +142,17 @@ db.collection("users")
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    }
+    },
   },
   beforeCreate() {},
-  created() {
-    //console.log(firebase.firestore.Timestamp.now().seconds);
-  }
+  created() {},
 };
 </script>
 <style scoped>
-.Logincontainer {
-  margin-top: 60px;
+.container {
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
-
 h3 {
   margin-bottom: 40px;
 }

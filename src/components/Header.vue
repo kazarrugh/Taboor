@@ -17,13 +17,23 @@
           <b-nav-item-dropdown right menu-class="w-100">
             <!-- Using 'button-content' slot -->
             <template v-slot:button-content>
-              <em>User</em>
+              <em v-if="!ur.displayName">المستخدم</em>
+              <em v-else>{{ ur.displayName }}</em>
             </template>
-
-            <b-dropdown-item to="/Signup">New User</b-dropdown-item>
+            <b-dropdown-item v-if="!loggedin" to="/Login"
+              >تسجيل الدخول</b-dropdown-item
+            >
+            <b-dropdown-item v-if="!loggedin" to="/Signup"
+              >فرع جديد</b-dropdown-item
+            >
+            <b-dropdown-item v-if="loggedin" to="/profile"
+              >الملف التعريفي</b-dropdown-item
+            >
             <br />
 
-            <b-dropdown-item @click="logout()">Sign Out</b-dropdown-item>
+            <b-dropdown-item v-if="loggedin" @click="logout()"
+              >تسجيل الخروج</b-dropdown-item
+            >
           </b-nav-item-dropdown>
         </b-navbar-nav>
       </b-collapse>
@@ -55,6 +65,7 @@ export default {
         .signOut()
         .then(() => {
           firebase.auth().onAuthStateChanged(() => {
+            window.location.reload();
             this.$router.push({ name: "Login", query: {} });
             this.$emit("logout");
           });

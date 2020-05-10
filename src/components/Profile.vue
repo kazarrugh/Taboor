@@ -1,118 +1,119 @@
 <template>
   <div>
     <b-container class="container" :dir="dir">
-      <h3>ملف تعريف الفرع</h3>
-      <b-form v-if="show" @submit.prevent="updateProfile">
-        <b-row align-h="center">
-          <b-col sm="6">
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1"
-              label="إسم الفرع:"
-              label-for="input-1"
-              class="input-title"
-            >
-              <b-form-input
-                id="input-1"
-                v-model="form.displayName"
-                type="text"
-                required
-                placeholder="اسم فرع موزع الخدمة او الشركة"
-              ></b-form-input>
-            </b-form-group>
+      <b-overlay :show="loading" rounded="sm">
+        <h3>ملف تعريف الفرع</h3>
+        <b-form v-if="show" @submit.prevent="updateProfile">
+          <b-row align-h="center">
+            <b-col sm="6">
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1"
+                label="إسم الفرع:"
+                label-for="input-1"
+                class="input-title"
+              >
+                <b-form-input
+                  id="input-1"
+                  v-model="form.displayName"
+                  type="text"
+                  required
+                  placeholder="اسم فرع موزع الخدمة او الشركة"
+                ></b-form-input>
+              </b-form-group>
 
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="رقم الهاتف:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <VuePhoneNumberInput
-                dir="ltr"
-                v-model="vuephone"
-                @update="convertphone"
-                size="lg"
-                default-country-code="LY"
-                color="#ff0000"
-                required
-                clearable
-              />
-            </b-form-group>
-
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="نوع النشاط:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <v-select :options="servicetypes" v-model="form.servicetype">
-                <template #search="{attributes, events}">
-                  <input
-                    :required="!form.servicetype"
-                    class="vs__search"
-                    v-bind="attributes"
-                    v-on="events"
-                  />
-                </template>
-              </v-select>
-            </b-form-group>
-
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="بداية ساعات العمل:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <b-form-timepicker
-                size="md"
-                locale="ar-ly"
-                placeholder="لم يتم تحديد الوقت"
-                v-model="form.opentime"
-              ></b-form-timepicker>
-            </b-form-group>
-
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="نهاية ساعات العمل:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <b-form-timepicker
-                locale="ar-ly"
-                placeholder="لم يتم تحديد الوقت"
-                v-model="form.closetime"
-              ></b-form-timepicker>
-            </b-form-group>
-
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="الشعار:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <filepond
-                v-if="!ur.logo || changephoto"
-                :path="'Logos/'"
-                :filename="ur.uid"
-                instantUpload="true"
-                multiple="false"
-                imagePreviewHeight="200"
-                @getFiles="savefilepath"
-              />
-              <div v-else class="logocont">
-                <img
-                  :src="ur.logo"
-                  @click="changephoto = true"
-                  class="logoimg"
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
+                label="رقم الهاتف:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <VuePhoneNumberInput
+                  dir="ltr"
+                  v-model="vuephone"
+                  @update="convertphone"
+                  size="lg"
+                  default-country-code="LY"
+                  color="#ff0000"
+                  required
+                  clearable
                 />
-              </div>
-            </b-form-group>
+              </b-form-group>
 
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
+                label="نوع النشاط:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <v-select :options="servicetypes" v-model="form.servicetype">
+                  <template #search="{attributes, events}">
+                    <input
+                      :required="!form.servicetype"
+                      class="vs__search"
+                      v-bind="attributes"
+                      v-on="events"
+                    />
+                  </template>
+                </v-select>
+              </b-form-group>
+
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
+                label="بداية ساعات العمل:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <b-form-timepicker
+                  size="md"
+                  locale="ar-ly"
+                  placeholder="لم يتم تحديد الوقت"
+                  v-model="form.opentime"
+                ></b-form-timepicker>
+              </b-form-group>
+
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
+                label="نهاية ساعات العمل:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <b-form-timepicker
+                  locale="ar-ly"
+                  placeholder="لم يتم تحديد الوقت"
+                  v-model="form.closetime"
+                ></b-form-timepicker>
+              </b-form-group>
+
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
+                label="الشعار:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <filepond
+                  v-if="!ur.logo || changephoto"
+                  :path="'Logos/'"
+                  :filename="ur.uid"
+                  instantUpload="true"
+                  multiple="false"
+                  imagePreviewHeight="200"
+                  @getFiles="savefilepath"
+                />
+                <div v-else class="logocont">
+                  <img
+                    :src="ur.logo"
+                    @click="changephoto = true"
+                    class="logoimg"
+                  />
+                </div>
+              </b-form-group>
+              <!--
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-1a"
@@ -132,72 +133,113 @@
                 />
               </gmap-map>
             </b-form-group>
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-2"
-              label="البريد الإلكتروني:"
-              label-for="input-2"
-              class="input-title"
-            >
-              <b-form-input
-                dir="ltr"
-                id="input-2"
-                v-model="form.email"
-                type="text"
-                required
-                placeholder="البريد الالكتروني للفرع"
-              ></b-form-input>
-            </b-form-group>
+            -->
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-2"
+                label="البريد الإلكتروني:"
+                label-for="input-2"
+                class="input-title"
+              >
+                <b-form-input
+                  dir="ltr"
+                  id="input-2"
+                  v-model="form.email"
+                  type="text"
+                  required
+                  placeholder="البريد الالكتروني للفرع"
+                ></b-form-input>
+              </b-form-group>
 
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-3"
-              label="كلمة المرور:"
-              label-for="input-2"
-              class="input-title"
-            >
-              <b-form-input
-                dir="ltr"
-                id="input-3"
-                v-model="newPassword"
-                type="password"
-                placeholder="كلمة مرور تتكون من اكثر من 6 حروف او ارقام"
-              ></b-form-input>
-            </b-form-group>
+              <b-alert
+                :variant="alertcolor"
+                :show="dismissCountDown"
+                @dismissed="dismissCountDown = 0"
+                @dismiss-count-down="countDownChanged"
+              >
+                {{ alertmsg }}
+              </b-alert>
 
-            <b-button type="submit" variant="primary">Update</b-button>
-          </b-col>
-        </b-row>
-      </b-form>
+              <b-button type="submit" variant="primary">تخزين</b-button>
 
+              <b-button @click="passwordmodal = true" variant="warning"
+                >تغيير كلمة المرور</b-button
+              >
+            </b-col>
+          </b-row>
+        </b-form>
+      </b-overlay>
       <b-modal
         v-model="passwordmodal"
         id="modal-1"
-        title="Password Confirmation"
+        title="تغيير كلمة المرور"
+        ok-title="موافق"
+        cancel-title="الغاء الأمر"
         @ok="updatePasswordconfirmlogin"
+        :ok-disabled="!validconfirmpassword"
       >
-        <b-form-input
-          id="input-password"
-          v-model="password"
-          type="password"
-          required
-          placeholder="Please Enter your current Password"
-        ></b-form-input>
-      </b-modal>
+        <b-form-group
+          :style="'text-align: ' + ta + ';'"
+          id="input-group-3"
+          label="كلمة المرور الجديدة:"
+          label-for="input-2"
+          class="input-title"
+          :dir="dir"
+        >
+          <b-form-input
+            dir="ltr"
+            id="input-3c"
+            v-model="newPassword"
+            type="password"
+            :state="validnewpassword"
+            placeholder="كلمة مرور تتكون من اكثر من 6 حروف او ارقام"
+          ></b-form-input>
+        </b-form-group>
 
+        <b-form-group
+          :style="'text-align: ' + ta + ';'"
+          id="input-group-3"
+          label="كلمة المرور الحالية:"
+          label-for="input-2"
+          class="input-title"
+          :dir="dir"
+        >
+          <b-form-input
+            dir="ltr"
+            id="input-3b"
+            v-model="password"
+            type="password"
+            :state="validpassword"
+            placeholder="كلمة المرور القديمة"
+          ></b-form-input>
+        </b-form-group>
+      </b-modal>
       <b-modal
         v-model="emailmodal"
-        id="modal-1"
-        title="Password Confirmation"
-        @ok="updateEmailconfirmlogin"
+        id="modal-2"
+        title="تأكيد كلمة المرور"
+        ok-title="موافق"
+        cancel-title="الغاء الأمر"
+        @ok="updateProfile"
+        :ok-disabled="!validpassword"
       >
-        <b-form-input
-          id="input-password"
-          v-model="password"
-          type="password"
-          required
-          placeholder="Please Enter your current Password"
-        ></b-form-input>
+        <b-form-group
+          :style="'text-align: ' + ta + ';'"
+          id="input-group-3"
+          label="كلمة المرور الحالية:"
+          label-for="input-2"
+          class="input-title"
+          :dir="dir"
+        >
+          <b-form-input
+            dir="ltr"
+            id="input-3a"
+            v-model="password"
+            type="password"
+            placeholder="كلمة المرور القديمة"
+            :state="validpassword"
+          ></b-form-input>
+        </b-form-group>
       </b-modal>
     </b-container>
   </div>
@@ -217,10 +259,13 @@ export default {
   data() {
     return {
       form: {
-        displayName: "",
-        email: "",
-        phoneNumber: "",
-        servicetype: "",
+        // displayName: "",
+        // email: "",
+        // phoneNumber: "",
+        // opentime: "",
+        // closetime: "",
+        // servicetype: "",
+        // coordinates: null,
       },
       servicetypes: [],
       originalemail: "",
@@ -228,17 +273,16 @@ export default {
       newPassword: "",
       emailmodal: false,
       passwordmodal: false,
-      photoURL: "",
+      loading: false,
       error: "",
       vuephone: "",
-      authUser: null,
       show: true,
       changephoto: false,
       center: { lat: 32.894821, lng: 13.181072 },
-      coordinates: null,
-      markers: [],
-      places: [],
-      currentPlace: null,
+      alertmsg: "",
+      alertcolor: "",
+      dismissSecs: 5,
+      dismissCountDown: 0,
     };
   },
   props: ["dir", "ta", "ur"],
@@ -246,9 +290,23 @@ export default {
     VuePhoneNumberInput,
     filepond,
   },
+  computed: {
+    validpassword: function() {
+      if (this.password && this.password.length > 5) return true;
+      else return false;
+    },
+    validnewpassword: function() {
+      if (this.newPassword && this.newPassword.length > 5) return true;
+      else return false;
+    },
+    validconfirmpassword: function() {
+      if (this.validpassword && this.validnewpassword) return true;
+      else return false;
+    },
+  },
   methods: {
     convertphone(payload) {
-      this.phoneNumber = payload.formattedNumber;
+      this.form.phoneNumber = payload.formattedNumber;
     },
     savefilepath(arrayofpaths) {
       var filepath = arrayofpaths[arrayofpaths.length - 1];
@@ -259,103 +317,195 @@ export default {
             logo: filepath,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
-        // console.log("status ", this.$router.resolve(filepath).route.name);
         this.changephoto = false;
       }, 5000);
     },
     updateProfile() {
+      //Submit Clicked
+      if (this.form.email != this.originalemail && this.emailmodal == false) {
+        this.emailmodal = true;
+      } else {
+        this.loading = true;
+        if (this.form.email != this.originalemail) {
+          firebase
+            .auth()
+            .signInWithEmailAndPassword(this.originalemail, this.password)
+            .then((signedin) => {
+              signedin.user
+                .updateEmail(this.form.email)
+                .then(() => {
+                  // console.log("updating original email to ", this.form.email);
+                  this.originalemail = this.form.email;
+                  this.updateProfileDetails();
+                  this.loading = false;
+                  this.password = null;
+                })
+                .catch((error) => {
+                  this.password = null;
+                  //Get Translated Error Message
+                  db.collection("translations")
+                    .add({
+                      input: error.message,
+                    })
+                    .then(function(docRef) {
+                      //console.log("Document written with ID: ", docRef.id);
+                      setTimeout(() => {
+                        this.loading = false;
+                        this.alertmsg = docRef.translated.ar;
+                        this.alertcolor = "danger";
+                        this.showAlert();
+                      }, 3000);
+                    });
+                  //End Translated error
+                });
+            })
+            .catch((error) => {
+              this.password = null;
+              //Get Translated Error Message
+              db.collection("translations")
+                .add({
+                  input: error.message,
+                })
+                .then((docRef) => {
+                  console.log("docRef: ", docRef);
+                  console.log("translations written with ID: ", docRef.id);
+                  setTimeout(() => {
+                    db.collection("translations")
+                      .doc(docRef.id)
+                      .get()
+                      .then((doc) => {
+                        this.loading = false;
+                        console.log(doc.data().translated.ar);
+                        this.alertmsg = doc.data().translated.ar;
+                        this.alertcolor = "danger";
+                        this.showAlert();
+                      })
+                      .then(() => {
+                        // console.log("deleting translation", docRef.id);
+                        db.collection("translations")
+                          .doc(docRef.id)
+                          .delete();
+                      });
+                  }, 3000);
+                });
+              //End Translated error
+            });
+        } else {
+          //Update profile details if email was not changed
+          this.updateProfileDetails();
+          // console.log(
+          //   "Update profile details if email was not changed",
+          //   this.originalemail,
+          //   this.form.email
+          // );
+          this.loading = false;
+        }
+      }
+    },
+    updateProfileDetails() {
       db.collection("users")
         .doc(this.ur.uid)
         .set({
           displayName: this.form.displayName,
           email: this.form.email,
           phoneNumber: this.form.phoneNumber,
+          opentime: this.form.opentime,
+          closetime: this.form.closetime,
           servicetype: this.form.servicetype,
+          coordinates: this.form.coordinates,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         })
         .then(() => {
-          //First time user
-          //this.$router.push("Profile");
+          this.alertmsg = "تم التخزين بنجاح";
+          this.alertcolor = "success";
+          this.showAlert();
         });
-
-      // this.authUser
-      //   .updateProfile({
-      //     displayName: this.displayName,
-      //     //photoURL: this.photoURL
-      //     //this.$app.HeaderKey += 1;
-      //   })
-      //   .then(() => {
-      //     this.$emit("clickedItem", this.hk); //Update header with the new name
-      //     //update users table with the new display name
-      //     firebase
-      //       .database()
-      //       .ref("users")
-      //       .child(this.authUser.uid)
-      //       .update({ displayName: this.displayName });
-      //   });
-    },
-    updateCustomDetails() {
-      // firebase
-      //   .database()
-      //   .ref("users")
-      //   .child(this.authUser.uid)
-      //   .update({ phoneNumber: this.phoneNumber });
-    },
-    updateEmail() {
-      this.emailmodal = true;
-    },
-    updateEmailconfirmlogin() {
-      // firebase
-      //   .auth()
-      //   .signInWithEmailAndPassword(this.originalemail, this.password)
-      //   .then((created) => {
-      //     this.authUser
-      //       .updateEmail(this.email)
-      //       .then(() => {
-      //         this.password = null;
-      //         this.originalemail = this.email;
-      //       })
-      //       .catch((error) => alert("🤕" + error.message));
-      //     firebase
-      //       .database()
-      //       .ref("users")
-      //       .child(created.user.uid)
-      //       .update({ email: this.email });
-      //   })
-      //   .catch((error) => {
-      //     alert(error.message);
-      //   });
-    },
-    updatePassword() {
-      this.passwordmodal = true;
     },
     updatePasswordconfirmlogin() {
-      // firebase
-      //   .auth()
-      //   .signInWithEmailAndPassword(this.email, this.password)
-      //   .then(() => {
-      //     this.authUser
-      //       .updatePassword(this.newPassword)
-      //       .then(() => {
-      //         this.password = null;
-      //       })
-      //       .catch((error) => alert("🤕" + error.message));
-      //   })
-      //   .catch((error) => {
-      //     alert(error.message);
-      //   });
+      this.loading = true;
+      firebase
+        .auth()
+        .signInWithEmailAndPassword(this.originalemail, this.password)
+        .then((signedin) => {
+          signedin.user
+            .updatePassword(this.newPassword)
+            .then(() => {
+              this.password = null;
+              this.newPassword = null;
+              this.loading = false;
+              this.alertmsg = "تم تغيير كلمة المرور بنجاح";
+              this.alertcolor = "success";
+              this.showAlert();
+            })
+            .catch((error) => {
+              this.password = null;
+              this.newPassword = null;
+              //Get Translated Error Message
+              db.collection("translations")
+                .add({
+                  input: error.message,
+                })
+                .then((docRef) => {
+                  setTimeout(() => {
+                    db.collection("translations")
+                      .doc(docRef.id)
+                      .get()
+                      .then((doc) => {
+                        this.loading = false;
+                        this.alertmsg = doc.data().translated.ar;
+                        this.alertcolor = "danger";
+                        this.showAlert();
+                      })
+                      .then(() => {
+                        db.collection("translations")
+                          .doc(docRef.id)
+                          .delete();
+                      });
+                  }, 3000);
+                });
+              //End Translated error
+            });
+        })
+        .catch((error) => {
+          this.password = null;
+          this.newPassword = null;
+          //Get Translated Error Message
+          db.collection("translations")
+            .add({
+              input: error.message,
+            })
+            .then((docRef) => {
+              setTimeout(() => {
+                db.collection("translations")
+                  .doc(docRef.id)
+                  .get()
+                  .then((doc) => {
+                    this.loading = false;
+                    this.alertmsg = doc.data().translated.ar;
+                    this.alertcolor = "danger";
+                    this.showAlert();
+                  })
+                  .then(() => {
+                    db.collection("translations")
+                      .doc(docRef.id)
+                      .delete();
+                  });
+              }, 2500);
+            });
+          //End Translated error
+        });
     },
     // receives a place object via the autocomplete component
 
     geolocate() {
-      console.log("gettinglocation");
+      //console.log("gettinglocation");
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
           this.center = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          this.coordinates = new firebase.firestore.GeoPoint(
+          this.form.coordinates = new firebase.firestore.GeoPoint(
             position.coords.latitude,
             position.coords.longitude
           );
@@ -366,22 +516,51 @@ export default {
     },
     //set after merker end drag
     dragMarker(evnt) {
-      this.coordinates = new firebase.firestore.GeoPoint(
+      this.form.coordinates = new firebase.firestore.GeoPoint(
         evnt.lat(),
         evnt.lng()
       );
     },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert() {
+      this.dismissCountDown = this.dismissSecs;
+    },
   },
   created() {
+    // Object.assign(this.form, this.ur);
+    this.form = JSON.parse(JSON.stringify(this.ur));
+    this.vuephone = this.ur.phoneNumber;
+    this.originalemail = JSON.parse(JSON.stringify(this.ur.email));
+    // console.log(
+    //   "reseting original email from",
+    //   this.originalemail,
+    //   "to",
+    //   this.ur.email
+    // );
+
     //Get user location
     this.geolocate();
 
-    // Object.assign(this.form, this.ur);
-    this.form = this.ur;
-
     //Get possible service types
     db.collection("users").onSnapshot((querySnapshot) => {
-      var servicetypes = [];
+      var servicetypes = [
+        "مصرف",
+        "مخبز",
+        "مواد غدائية",
+        "محل حلويات",
+        "خضروات",
+        "موزع غار",
+        "بنزين",
+        "حلاق",
+        "صيدلية",
+        "عيادة",
+        "الجوازات",
+        "قنصلية",
+        "السجل التجاري",
+        "الضرائب",
+      ];
       querySnapshot.forEach(function(doc) {
         if (
           doc.data().servicetype != null &&
@@ -390,7 +569,7 @@ export default {
           servicetypes.push(doc.data().servicetype);
         }
       });
-      console.log("Current Service Types: ", servicetypes.join(", "));
+      //console.log("Current Service Types: ", servicetypes.join(", "));
       this.servicetypes = servicetypes;
     });
 
@@ -398,7 +577,7 @@ export default {
     /*
     this.displayName = this.ur.displayName;
     this.email = this.ur.email;
-    this.originalemail = this.ur.email;
+
     this.vuephone = this.ur.phoneNumber;
     this.phoneNumber = this.ur.phoneNumber;
     */
@@ -429,7 +608,7 @@ export default {
   text-align: center;
 }
 button {
-  margin-top: 20px;
+  margin: 20px;
   cursor: pointer;
 }
 p {
