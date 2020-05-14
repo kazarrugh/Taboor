@@ -2,16 +2,21 @@
   <div id="app">
     <Header v-if="loadcompleted" :ur="CurrentUserRoles" @logout="clearroles" />
     <router-view
+      class="rv"
       v-if="loadcompleted"
       :dir="direction"
       :ta="textalign"
       :ur="CurrentUserRoles"
     />
+    <splash-screen v-if="!loadcompleted" />
+
+    <div id="recaptcha"></div>
   </div>
 </template>
 <script>
 document.title = "Taboor";
 import Header from "./components/Header.vue";
+import SplashScreen from "./components/SplashScreen.vue";
 import firebase from "./firebaseConfig.js";
 const db = firebase.firestore();
 
@@ -19,6 +24,7 @@ export default {
   name: "app",
   components: {
     Header,
+    SplashScreen,
   },
   data() {
     return {
@@ -35,8 +41,10 @@ export default {
     clearroles() {
       this.CurrentUserRoles = {};
       this.loggedin(); //Important
+      this.logout();
     },
     logout() {
+      console.log("logout");
       //TEMPORARY HERE
       firebase
         .auth()
@@ -46,6 +54,9 @@ export default {
             this.$router.push({ name: "Login", query: {} });
           });
         });
+    },
+    goodjob() {
+      console.log("goodjob");
     },
   },
   beforeCreate() {},
@@ -63,15 +74,30 @@ For testing only
         console.log("onSnapshot", doc.data());
       });
 */
+    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    //   "recaptcha",
+    //   {
+    //     callback: (response) => {
+    //       // reCAPTCHA solved, allow signInWithPhoneNumber.
+    //       console.log("reCAPTCHA-solved", response);
+    //     },
+    //     "expired-callback": () => {
+    //       // Response expired. Ask user to solve reCAPTCHA again.
+    //       console.log("reCAPTCHA-expired");
+    //     },
+    //   }
+    // );
+    // window.recaptchaVerifier.render();
+
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        //console.log("Logged in user ", user.uid);
+        console.log("Logged in user ", user.uid);
         this.loggedin = db
           .collection("users")
           .doc(user.uid)
           .onSnapshot(
             (doc) => {
-              //console.log("onSnapshot", doc.data());
+              console.log("onSnapshot", doc.data());
               this.CurrentUserRoles = doc.data();
               this.CurrentUserRoles.uid = user.uid;
               this.loadcompleted = true;
@@ -81,13 +107,16 @@ For testing only
             }
           );
       } else {
-        if (this.$route.path != "/Login") {
-          var referrer = this.$router.history.current.fullPath;
-          this.$router.push({ name: "Login", query: { redirect: referrer } });
-        }
+        console.log("else");
+        // if (this.$route.path != "/Login") {
+        //   var referrer = this.$router.history.current.fullPath;
+        //   this.$router.push({ name: "Login", query: { redirect: referrer } });
+        // }
+
         this.loadcompleted = true;
       }
     });
+
     /*
     firebase
       .auth()
@@ -156,6 +185,26 @@ For testing only
     //this.AllUsers = this.getUsers();
   },
   watch: {},
+  mounted() {
+    firebase.auth().useDeviceLanguage();
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+      "recaptcha",
+      {
+        size: "invisible",
+        callback: () => {
+          // reCAPTCHA solved, allow .
+          console.log("reCAPTCHA-solved");
+        },
+        "expired-callback": function() {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          console.log("reCAPTCHA-expired");
+        },
+      }
+    );
+    window.recaptchaVerifier.render().then(function(widgetId) {
+      window.recaptchaWidgetId = widgetId;
+    });
+  },
 };
 </script>
 <style>
@@ -178,5 +227,12 @@ For testing only
 
 #nav a.router-link-exact-active {
   color: #42b983;
+}
+.grecaptcha-badge {
+  visibility: collapse !important;
+}
+.rv {
+  padding-top: 60px;
+  padding-bottom: 60px;
 }
 </style>

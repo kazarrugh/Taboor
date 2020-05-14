@@ -1,13 +1,20 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 
+import Dashboard from "@/components/Dashboard";
 import Login from "@/components/Login";
 import Signup from "@/components/Signup";
 import Profile from "@/components/Profile";
+import Provider from "@/components/Provider";
 
 Vue.use(VueRouter);
 
 const routes = [
+  {
+    path: "/",
+    name: "Dashboard",
+    component: Dashboard,
+  },
   {
     path: "/Login",
     name: "Login",
@@ -22,6 +29,11 @@ const routes = [
     path: "/Profile",
     name: "Profile",
     component: Profile,
+  },
+  {
+    path: "/Provider",
+    name: "Provider",
+    component: Provider,
   },
 ];
 

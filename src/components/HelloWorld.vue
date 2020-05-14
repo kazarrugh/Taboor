@@ -5,10 +5,15 @@
 <script>
 export default {
   name: "HelloWorld",
-  props: ["ur"],
+  props: ["ur", "dir", "td"],
   data() {
     return {};
   },
+  computed: {},
+  methods: {},
+  beforeCreate() {},
+  created() {},
+  mounted() {},
 };
 </script>
 

@@ -22,6 +22,10 @@ import vSelect from "vue-select";
 Vue.component("v-select", vSelect);
 import "vue-select/dist/vue-select.css";
 
+import VuePwaInstallPlugin from "vue-pwa-install";
+Vue.use(VuePwaInstallPlugin);
+
+/*
 import * as VueGoogleMaps from "vue2-google-maps";
 import { gmapApi } from "./api.js";
 
@@ -50,6 +54,7 @@ Vue.use(VueGoogleMaps, {
 });
 import { GmapMarker } from "vue2-google-maps/src/components/marker";
 Vue.component("GmapMarker", GmapMarker);
+*/
 
 Vue.config.productionTip = false;
 
