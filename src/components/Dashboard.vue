@@ -15,9 +15,7 @@
         <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
           <b-card
             :header="pro.displayName"
-            :footer="'Tel :' + pro.phoneNumber"
             style="max-width: 20rem;"
-            inline-block
             @click="viewprovider(pro.id)"
           >
             <!-- <b-card-img
@@ -25,10 +23,23 @@
               :src="pro.logo"
             /> -->
             <!-- <div :style='background-image: url('+pro.logo+');"></div> -->
-            <div
-              class="customimg"
-              :style="'background-image: url(' + pro.logo + ');'"
-            ></div>
+            <!-- <b-card-body>
+              
+            </b-card-body> -->
+            <b-list-group flush>
+              <b-list-group-item>
+                <div
+                  class="customimg"
+                  :style="'background-image: url(' + pro.logo + ');'"
+                ></div>
+              </b-list-group-item>
+              <!-- <b-list-group-item>
+                {{ pro.opentime }} - {{ pro.closetime }}
+              </b-list-group-item> -->
+            </b-list-group>
+            <a :href="'tel:' + pro.phoneNumber">
+              <b-card-footer>{{ pro.phoneNumber }}</b-card-footer>
+            </a>
           </b-card>
         </div>
       </VueSlickCarousel>
@@ -202,7 +213,7 @@ export default {
 .card-body {
   padding: 0px;
   min-height: 200px;
-  max-height: 200px;
+  /* max-height: 200px; */
   position: relative;
 }
 .card-footer {
@@ -227,5 +238,8 @@ a:hover {
 
   background-repeat: no-repeat;
   background-position: center;
+}
+.list-group-item {
+  padding: 0px;
 }
 </style>

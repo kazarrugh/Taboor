@@ -25,6 +25,9 @@ import "vue-select/dist/vue-select.css";
 import VuePwaInstallPlugin from "vue-pwa-install";
 Vue.use(VuePwaInstallPlugin);
 
+// import VueQrcodeReader from "vue-qrcode-reader";
+// Vue.use(VueQrcodeReader);
+
 /*
 import * as VueGoogleMaps from "vue2-google-maps";
 import { gmapApi } from "./api.js";

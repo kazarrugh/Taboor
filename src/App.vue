@@ -13,8 +13,10 @@
     <div id="recaptcha"></div>
   </div>
 </template>
+
 <script>
 document.title = "Taboor";
+
 import Header from "./components/Header.vue";
 import SplashScreen from "./components/SplashScreen.vue";
 import firebase from "./firebaseConfig.js";
@@ -55,13 +57,9 @@ export default {
           });
         });
     },
-    goodjob() {
-      console.log("goodjob");
-    },
   },
   beforeCreate() {},
   created() {
-    console.log("created");
     if (this.$route.path == "/logout") {
       this.logout();
     }
@@ -91,13 +89,13 @@ For testing only
 
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        console.log("Logged in user ", user.uid);
+        //console.log("Logged in user ", user.uid);
         this.loggedin = db
           .collection("users")
           .doc(user.uid)
           .onSnapshot(
             (doc) => {
-              console.log("onSnapshot", doc.data());
+              //console.log("onSnapshot", doc.data());
               this.CurrentUserRoles = doc.data();
               this.CurrentUserRoles.uid = user.uid;
               this.loadcompleted = true;
@@ -107,7 +105,7 @@ For testing only
             }
           );
       } else {
-        console.log("else");
+        //console.log("else");
         // if (this.$route.path != "/Login") {
         //   var referrer = this.$router.history.current.fullPath;
         //   this.$router.push({ name: "Login", query: { redirect: referrer } });
@@ -208,8 +206,12 @@ For testing only
 };
 </script>
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Baloo+2:wght@400;500;600;700&display=swap");
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: Avenir, Helvetica, Arial, sans-serif; */
+  /* font-family: Almarai, Avenir, Helvetica, Arial, sans-serif; */
+  font-family: "Almarai", "Baloo 2", "sans-serif";
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -234,5 +236,11 @@ For testing only
 .rv {
   padding-top: 60px;
   padding-bottom: 60px;
+}
+
+@media print {
+  button {
+    display: none !important;
+  }
 }
 </style>

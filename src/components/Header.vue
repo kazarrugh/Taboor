@@ -19,13 +19,15 @@
           <b-nav-item v-if="loggedin" to="/profile">{{
             ur.displayName
           }}</b-nav-item>
+          <b-nav-item v-if="!loggedin" to="/Signup">فرع جديد</b-nav-item>
+          <!--
           <b-nav-item v-if="loggedin" @click="logout()"
             >تسجيل الخروج</b-nav-item
           >
 
           <b-nav-item v-if="!loggedin" to="/Login">تسجيل الدخول</b-nav-item>
-          <b-nav-item v-if="!loggedin" to="/Signup">فرع جديد</b-nav-item>
-          <!--
+          
+          
           <b-nav-item-dropdown right menu-class="w-100">
             <template v-slot:button-content>
               <em v-if="!ur.displayName">المستخدم</em>
@@ -58,13 +60,17 @@
 
       <b-row style="width:100%;margin:0px;">
         <b-col cols="4">
-          <router-link to="/">
+          <router-link v-if="!loggedin" to="/">
             <b-icon icon="house-door" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">Home</div>
+            <div class="icontitle">الرئيسية</div>
+          </router-link>
+          <router-link v-if="loggedin" to="/serve">
+            <b-icon icon="play" variant="light" font-scale="1.5"></b-icon>
+            <div class="icontitle">خدمة</div>
           </router-link>
         </b-col>
         <b-col cols="4">
-          <router-link to="/">
+          <router-link v-if="!loggedin" to="/QrScan">
             <b-icon
               icon="columns-gap"
               variant="light"
@@ -72,12 +78,25 @@
             ></b-icon>
             <div class="icontitle">QR Scan</div>
           </router-link>
+          <router-link v-if="loggedin" to="/QrPaper">
+            <b-icon
+              icon="columns-gap"
+              variant="light"
+              font-scale="1.5"
+            ></b-icon>
+            <div class="icontitle">QR Paper</div>
+          </router-link>
         </b-col>
         <b-col cols="4">
-          <router-link to="/login">
+          <router-link v-if="!loggedin" to="/login">
             <b-icon icon="lock" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">Login</div>
+            <div class="icontitle">تسجيل الدخول</div>
           </router-link>
+
+          <div v-if="loggedin" @click="logout()" style="cursor:pointer;">
+            <b-icon icon="lock-fill" variant="light" font-scale="1.5"></b-icon>
+            <div class="icontitle">تسجيل الخروج</div>
+          </div>
         </b-col>
       </b-row>
       <!-- </b-container> -->

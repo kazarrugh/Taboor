@@ -1,0 +1,208 @@
+<template>
+  <b-container class="container" :dir="dir">
+    <div>
+      <!-- Start Provider Information -->
+      <ProviderContact :ur="provider" :dir="dir" :ta="ta" />
+      <!-- End Provider Information -->
+
+      <b-form @submit="getnumber">
+        <v-select
+          v-if="provider.windowtype && provider.windowtype.length > 1"
+          :options="this.provider.windowtype"
+          placeholder="نوع الخدمة المقدمة"
+          v-model="servicewindow"
+          :dir="dir"
+        >
+          <template #search="{attributes, events}">
+            <input
+              :required="!servicewindow"
+              class="vs__search"
+              v-bind="attributes"
+              v-on="events"
+            />
+          </template>
+        </v-select>
+        <br /><br />
+        <v-select
+          :options="totalwindows"
+          placeholder="رقم نافدة مقدم الخدمة"
+          v-model="mywindow"
+          :dir="dir"
+        >
+          <template #search="{attributes, events}">
+            <input
+              :required="!mywindow"
+              class="vs__search"
+              v-bind="attributes"
+              v-on="events"
+            />
+          </template>
+        </v-select>
+
+        <br /><br />
+        <b-button
+          block
+          :disabled="servicewindow == null || nextnumber > maxnumber"
+          variant="outline-primary"
+          type="submit"
+          size="lg"
+          >الرقم التالي</b-button
+        >
+        <div style="font-size: 18px;" v-if="servingnumber">
+          <br /><br />
+          <b-alert variant="primary" show
+            >الرقم الحالي {{ servingnumber }}</b-alert
+          >
+        </div>
+      </b-form>
+
+      <!-- currently served numbers -->
+
+      <Display
+        :ur="provider"
+        :servicewindow="servicewindow"
+        :dir="dir"
+        :ta="ta"
+      />
+      <!-- end currently served numbers -->
+      <!-- current total numbers -->
+      <TotalNumbers
+        :ur="provider"
+        :servicewindow="servicewindow"
+        :dir="dir"
+        :ta="ta"
+      />
+      <!-- end current total numbers -->
+    </div>
+  </b-container>
+</template>
+
+<script>
+import ProviderContact from "@/components/ProviderContact";
+import Display from "@/components/Display";
+import TotalNumbers from "@/components/TotalNumbers";
+
+import firebase from "../firebaseConfig.js";
+const db = firebase.firestore();
+export default {
+  name: "Serve",
+  props: ["ur", "dir", "ta"],
+  data() {
+    return {
+      provider: {},
+      servicewindow: null,
+      mywindow: null,
+      servingnumber: null,
+    };
+  },
+  components: {
+    ProviderContact,
+    Display,
+    TotalNumbers,
+  },
+  computed: {
+    md() {
+      if (this.provider.currentnumber) {
+        return Math.ceil(12 / Object.keys(this.provider.currentnumber).length);
+      } else {
+        return "12";
+      }
+    },
+    maxnumber() {
+      if (
+        this.servicewindow == null ||
+        this.provider.currentnumber == null ||
+        this.provider.currentnumber[this.servicewindow] == null
+      ) {
+        return null;
+      }
+      return this.provider.currentnumber[this.servicewindow];
+    },
+    nextnumber() {
+      if (
+        this.servicewindow == null ||
+        this.provider.currentlyserving == null ||
+        this.provider.currentlyserving[this.servicewindow] == null
+      ) {
+        return 1;
+      }
+      var arr = Object.values(
+        this.provider.currentlyserving[this.servicewindow]
+      );
+      var max = arr.reduce(function(a, b) {
+        return Math.max(a, b);
+      });
+      return max + 1;
+    },
+    totalwindows() {
+      var tw = [];
+      for (var i = 1; i < 21; i++) {
+        tw.push(i);
+      }
+      return tw;
+    },
+  },
+  methods: {
+    getnumber(evt) {
+      evt.preventDefault();
+
+      if (this.provider.currentlyserving == null) {
+        this.provider.currentlyserving = {};
+      }
+
+      if (this.provider.currentlyserving[this.servicewindow] == null) {
+        this.provider.currentlyserving[this.servicewindow] = {};
+      }
+
+      // if (
+      //   this.provider.currentlyserving[this.servicewindow][this.mywindow] !=
+      //   null
+      // ) {
+      //   this.servingnumber =
+      //     this.provider.currentlyserving[this.servicewindow][this.mywindow] + 1;
+      // } else {
+      //   this.servingnumber = 1;
+      // }
+      this.servingnumber = this.nextnumber;
+      //Update local data object
+      this.provider.currentlyserving[this.servicewindow][
+        this.mywindow
+      ] = this.servingnumber;
+
+      //Update remote data object
+      db.collection("users")
+        .doc(this.ur.uid)
+        .update({
+          currentlyserving: this.provider.currentlyserving,
+        });
+    },
+  },
+  beforeCreate() {},
+  created() {
+    db.collection("users")
+      .doc(this.ur.uid)
+      .onSnapshot((doc) => {
+        this.provider = doc.data();
+        if (
+          this.provider.windowtype == null ||
+          this.provider.windowtype.length < 2
+        ) {
+          this.servicewindow = "اجمالي عدد الطابور";
+        }
+      });
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped>
+.container {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.v-select {
+  font-size: 20px;
+  text-align: center;
+}
+</style>

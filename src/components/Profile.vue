@@ -63,6 +63,27 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
+                label="انواع الخدمات:"
+                label-for="input-1a"
+                class="input-title"
+              >
+                <b-form-tags
+                  v-model="form.windowtype"
+                  placeholder="   كل نوع خدمة له طابور خاص "
+                  addButtonText="اضافة"
+                  addButtonVariant="primary"
+                  tag-variant="primary"
+                  size="md"
+                  tagClass="tagClass"
+                  class="mb-2"
+                  :dir="dir"
+                  :style="'text-align: ' + ta + ';'"
+                ></b-form-tags>
+              </b-form-group>
+
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                id="input-group-1a"
                 label="بداية ساعات العمل:"
                 label-for="input-1a"
                 class="input-title"
@@ -412,6 +433,7 @@ export default {
           opentime: this.form.opentime,
           closetime: this.form.closetime,
           servicetype: this.form.servicetype,
+          windowtype: this.form.windowtype,
           coordinates: this.form.coordinates,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         })
@@ -612,6 +634,9 @@ button {
 }
 p {
   margin-top: 40px;
+  font-size: 13px;
+}
+.tagClass {
   font-size: 13px;
 }
 p a {
