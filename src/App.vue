@@ -7,6 +7,8 @@
       :dir="direction"
       :ta="textalign"
       :ur="CurrentUserRoles"
+      :providers="providers"
+      @getdistance="getproviders"
     />
     <splash-screen v-if="!loadcompleted" />
 
@@ -19,6 +21,9 @@ document.title = "Taboor";
 
 import Header from "./components/Header.vue";
 import SplashScreen from "./components/SplashScreen.vue";
+
+import getDistance from "geolib/es/getDistance";
+
 import firebase from "./firebaseConfig.js";
 const db = firebase.firestore();
 
@@ -26,17 +31,17 @@ export default {
   name: "app",
   components: {
     Header,
-    SplashScreen,
+    SplashScreen
   },
   data() {
     return {
       // authUser: "",
       CurrentUserRoles: {},
-      //AllUsers: {},
+      providers: {},
       loadcompleted: false,
       direction: "rtl",
       textalign: "right",
-      loggedin: "",
+      loggedin: ""
     };
   },
   methods: {
@@ -57,6 +62,32 @@ export default {
           });
         });
     },
+    getproviders(mylocation) {
+      db.collection("users")
+        .orderBy("servicetype")
+        .onSnapshot(querySnapshot => {
+          this.providers = {};
+
+          querySnapshot.forEach(doc => {
+            this.providers[doc.id] = doc.data();
+            this.providers[doc.id].id = doc.id;
+            if (mylocation != null) {
+              if (doc.data().coordinates != null) {
+                this.providers[doc.id].distance = getDistance(
+                  { latitude: mylocation.Pc, longitude: mylocation.Vc },
+                  {
+                    latitude: doc.data().coordinates.Pc,
+                    longitude: doc.data().coordinates.Vc
+                  }
+                );
+              } else {
+                this.providers[doc.id].distance = 0;
+              }
+            }
+          });
+          this.loadcompleted = true;
+        });
+    }
   },
   beforeCreate() {},
   created() {
@@ -87,15 +118,17 @@ For testing only
     // );
     // window.recaptchaVerifier.render();
 
-    firebase.auth().onAuthStateChanged((user) => {
+    this.getproviders();
+
+    firebase.auth().onAuthStateChanged(user => {
       if (user) {
         //console.log("Logged in user ", user.uid);
+
         this.loggedin = db
           .collection("users")
           .doc(user.uid)
           .onSnapshot(
-            (doc) => {
-              //console.log("onSnapshot", doc.data());
+            doc => {
               this.CurrentUserRoles = doc.data();
               this.CurrentUserRoles.uid = user.uid;
               this.loadcompleted = true;
@@ -104,6 +137,9 @@ For testing only
               console.log(error);
             }
           );
+
+        //this.CurrentUserRoles.uid = user.uid;
+        //this.loadcompleted = true;
       } else {
         //console.log("else");
         // if (this.$route.path != "/Login") {
@@ -196,13 +232,13 @@ For testing only
         "expired-callback": function() {
           // Response expired. Ask user to solve reCAPTCHA again.
           console.log("reCAPTCHA-expired");
-        },
+        }
       }
     );
     window.recaptchaVerifier.render().then(function(widgetId) {
       window.recaptchaWidgetId = widgetId;
     });
-  },
+  }
 };
 </script>
 <style>

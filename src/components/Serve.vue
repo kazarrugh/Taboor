@@ -25,7 +25,7 @@
         <br /><br />
         <v-select
           :options="totalwindows"
-          placeholder="رقم نافدة مقدم الخدمة"
+          placeholder="رقم شباك مقدم الخدمة"
           v-model="mywindow"
           :dir="dir"
         >
@@ -92,13 +92,13 @@ export default {
       provider: {},
       servicewindow: null,
       mywindow: null,
-      servingnumber: null,
+      servingnumber: null
     };
   },
   components: {
     ProviderContact,
     Display,
-    TotalNumbers,
+    TotalNumbers
   },
   computed: {
     md() {
@@ -140,7 +140,7 @@ export default {
         tw.push(i);
       }
       return tw;
-    },
+    }
   },
   methods: {
     getnumber(evt) {
@@ -173,15 +173,15 @@ export default {
       db.collection("users")
         .doc(this.ur.uid)
         .update({
-          currentlyserving: this.provider.currentlyserving,
+          currentlyserving: this.provider.currentlyserving
         });
-    },
+    }
   },
   beforeCreate() {},
   created() {
     db.collection("users")
       .doc(this.ur.uid)
-      .onSnapshot((doc) => {
+      .onSnapshot(doc => {
         this.provider = doc.data();
         if (
           this.provider.windowtype == null ||
@@ -191,7 +191,7 @@ export default {
         }
       });
   },
-  mounted() {},
+  mounted() {}
 };
 </script>
 

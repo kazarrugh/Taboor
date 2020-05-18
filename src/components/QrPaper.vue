@@ -4,10 +4,48 @@
       <!-- Start Provider Information -->
       <ProviderContact :ur="ur" :dir="dir" :ta="ta" />
       <!-- End Provider Information -->
+      <v-select
+        v-if="ur.windowtype && ur.windowtype.length > 1"
+        :options="this.ur.windowtype"
+        placeholder="نوع الخدمة المقدمة"
+        v-model="servicewindow"
+        :dir="dir"
+      >
+      </v-select>
+      <br />
+      <v-select
+        :options="totalwindows"
+        placeholder="رقم شباك مقدم الخدمة"
+        v-model="mywindow"
+        :dir="dir"
+      >
+      </v-select>
+      <br />
       <b-button block variant="outline-primary" size="lg" @click="printwindow"
         >طباعة
       </b-button>
+      <div class="printlabel" v-if="servicewindow || mywindow">
+        <div v-if="servicewindow" class="bigtext">خدمة {{ servicewindow }}</div>
+        <div v-if="mywindow" class="bigtext">{{ mywindow }} شباك رقم</div>
+      </div>
+
+      <!-- <div
+        class="h-100 row align-items-center container"
+        v-if="servicewindow || mywindow"
+      >
+        <b-jumbotron
+          fluid
+          container-fluid
+          :header="'خدمة ' + servicewindow"
+          :lead="'شباك رقم ' + mywindow"
+          style="width:100%;"
+        >
+        </b-jumbotron>
+        <br />
+      </div> -->
+
       <qrcode-vue
+        v-if="!servicewindow && !mywindow"
         :value="qrpath"
         :size="qrsize"
         level="H"
@@ -43,11 +81,14 @@ export default {
   name: "QrPaper",
   props: ["ur", "dir", "td"],
   data() {
-    return {};
+    return {
+      servicewindow: null,
+      mywindow: null
+    };
   },
   components: {
     ProviderContact,
-    QrcodeVue,
+    QrcodeVue
   },
   computed: {
     qrpath() {
@@ -56,15 +97,22 @@ export default {
     qrsize() {
       return window.innerWidth * 0.5;
     },
+    totalwindows() {
+      var tw = [];
+      for (var i = 1; i < 21; i++) {
+        tw.push(i);
+      }
+      return tw;
+    }
   },
   methods: {
     printwindow() {
       window.print();
-    },
+    }
   },
   beforeCreate() {},
   created() {},
-  mounted() {},
+  mounted() {}
 };
 </script>
 
@@ -72,6 +120,23 @@ export default {
 .container {
   margin-top: 40px;
   margin-bottom: 40px;
+}
+.v-select {
+  font-size: 20px;
+  text-align: center;
+}
+@media print {
+  .v-select {
+    display: none;
+  }
+}
+.bigtext {
+  font-size: 8vw;
+  margin: 4vw;
+  margin-bottom: 8vw;
+}
+.printlabel {
+  margin-bottom: 8vw;
 }
 .divcenter {
   display: inline-block;

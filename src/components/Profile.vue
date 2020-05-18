@@ -134,27 +134,34 @@
                   />
                 </div>
               </b-form-group>
-              <!--
-            <b-form-group
-              :style="'text-align: ' + ta + ';'"
-              id="input-group-1a"
-              label="الموقع في الخريطة:"
-              label-for="input-1a"
-              class="input-title"
-            >
-              <gmap-map
-                :center="center"
-                :zoom="17"
-                style="width: 100%; height: 300px"
+              <b-modal
+                v-model="mapmodal"
+                id="modal-map"
+                title="الموقع في الخريطة"
+                ok-title="موافق"
+                cancel-title="الغاء الأمر"
+                @ok="updateProfile"
+                :dir="dir"
               >
-                <gmap-marker
-                  :position="center"
-                  :draggable="true"
-                  @dragend="dragMarker($event.latLng)"
-                />
-              </gmap-map>
-            </b-form-group>
-            -->
+                <b-form-group
+                  :style="'text-align: ' + ta + ';'"
+                  id="input-group-1a"
+                  label-for="input-1a"
+                  class="input-title"
+                >
+                  <gmap-map
+                    :center="center"
+                    :zoom="17"
+                    style="width: 100%; height: 300px"
+                  >
+                    <gmap-marker
+                      :position="center"
+                      :draggable="true"
+                      @dragend="dragMarker($event.latLng)"
+                    />
+                  </gmap-map>
+                </b-form-group>
+              </b-modal>
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-2"
@@ -186,6 +193,10 @@
               <b-button @click="passwordmodal = true" variant="warning"
                 >تغيير كلمة المرور</b-button
               >
+
+              <b-button @click="mapmodal = true" variant="warning"
+                >تغيير الاحداثيات</b-button
+              >
             </b-col>
           </b-row>
         </b-form>
@@ -198,6 +209,7 @@
         cancel-title="الغاء الأمر"
         @ok="updatePasswordconfirmlogin"
         :ok-disabled="!validconfirmpassword"
+        :dir="dir"
       >
         <b-form-group
           :style="'text-align: ' + ta + ';'"
@@ -243,6 +255,7 @@
         cancel-title="الغاء الأمر"
         @ok="updateProfile"
         :ok-disabled="!validpassword"
+        :dir="dir"
       >
         <b-form-group
           :style="'text-align: ' + ta + ';'"
@@ -294,6 +307,7 @@ export default {
       newPassword: "",
       emailmodal: false,
       passwordmodal: false,
+      mapmodal: false,
       loading: false,
       error: "",
       vuephone: "",
@@ -303,13 +317,13 @@ export default {
       alertmsg: "",
       alertcolor: "",
       dismissSecs: 5,
-      dismissCountDown: 0,
+      dismissCountDown: 0
     };
   },
   props: ["dir", "ta", "ur"],
   components: {
     VuePhoneNumberInput,
-    filepond,
+    filepond
   },
   computed: {
     validpassword: function() {
@@ -323,7 +337,7 @@ export default {
     validconfirmpassword: function() {
       if (this.validpassword && this.validnewpassword) return true;
       else return false;
-    },
+    }
   },
   methods: {
     convertphone(payload) {
@@ -336,7 +350,7 @@ export default {
           .doc(this.ur.uid)
           .update({
             logo: filepath,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         this.changephoto = false;
       }, 5000);
@@ -351,7 +365,7 @@ export default {
           firebase
             .auth()
             .signInWithEmailAndPassword(this.originalemail, this.password)
-            .then((signedin) => {
+            .then(signedin => {
               signedin.user
                 .updateEmail(this.form.email)
                 .then(() => {
@@ -361,12 +375,12 @@ export default {
                   this.loading = false;
                   this.password = null;
                 })
-                .catch((error) => {
+                .catch(error => {
                   this.password = null;
                   //Get Translated Error Message
                   db.collection("translations")
                     .add({
-                      input: error.message,
+                      input: error.message
                     })
                     .then(function(docRef) {
                       //console.log("Document written with ID: ", docRef.id);
@@ -380,21 +394,21 @@ export default {
                   //End Translated error
                 });
             })
-            .catch((error) => {
+            .catch(error => {
               this.password = null;
               //Get Translated Error Message
               db.collection("translations")
                 .add({
-                  input: error.message,
+                  input: error.message
                 })
-                .then((docRef) => {
+                .then(docRef => {
                   console.log("docRef: ", docRef);
                   console.log("translations written with ID: ", docRef.id);
                   setTimeout(() => {
                     db.collection("translations")
                       .doc(docRef.id)
                       .get()
-                      .then((doc) => {
+                      .then(doc => {
                         this.loading = false;
                         console.log(doc.data().translated.ar);
                         this.alertmsg = doc.data().translated.ar;
@@ -435,7 +449,7 @@ export default {
           servicetype: this.form.servicetype,
           windowtype: this.form.windowtype,
           coordinates: this.form.coordinates,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         })
         .then(() => {
           this.alertmsg = "تم التخزين بنجاح";
@@ -448,7 +462,7 @@ export default {
       firebase
         .auth()
         .signInWithEmailAndPassword(this.originalemail, this.password)
-        .then((signedin) => {
+        .then(signedin => {
           signedin.user
             .updatePassword(this.newPassword)
             .then(() => {
@@ -459,20 +473,20 @@ export default {
               this.alertcolor = "success";
               this.showAlert();
             })
-            .catch((error) => {
+            .catch(error => {
               this.password = null;
               this.newPassword = null;
               //Get Translated Error Message
               db.collection("translations")
                 .add({
-                  input: error.message,
+                  input: error.message
                 })
-                .then((docRef) => {
+                .then(docRef => {
                   setTimeout(() => {
                     db.collection("translations")
                       .doc(docRef.id)
                       .get()
-                      .then((doc) => {
+                      .then(doc => {
                         this.loading = false;
                         this.alertmsg = doc.data().translated.ar;
                         this.alertcolor = "danger";
@@ -488,20 +502,20 @@ export default {
               //End Translated error
             });
         })
-        .catch((error) => {
+        .catch(error => {
           this.password = null;
           this.newPassword = null;
           //Get Translated Error Message
           db.collection("translations")
             .add({
-              input: error.message,
+              input: error.message
             })
-            .then((docRef) => {
+            .then(docRef => {
               setTimeout(() => {
                 db.collection("translations")
                   .doc(docRef.id)
                   .get()
-                  .then((doc) => {
+                  .then(doc => {
                     this.loading = false;
                     this.alertmsg = doc.data().translated.ar;
                     this.alertcolor = "danger";
@@ -522,10 +536,10 @@ export default {
     geolocate() {
       //console.log("gettinglocation");
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
+        navigator.geolocation.getCurrentPosition(position => {
           this.center = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude,
+            lng: position.coords.longitude
           };
           this.form.coordinates = new firebase.firestore.GeoPoint(
             position.coords.latitude,
@@ -538,17 +552,22 @@ export default {
     },
     //set after merker end drag
     dragMarker(evnt) {
+      //console.log("marker changed to ", evnt.lat(), evnt.lng());
       this.form.coordinates = new firebase.firestore.GeoPoint(
         evnt.lat(),
         evnt.lng()
       );
+      this.center = {
+        lat: evnt.lat(),
+        lng: evnt.lng()
+      };
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    },
+    }
   },
   created() {
     // Object.assign(this.form, this.ur);
@@ -563,10 +582,18 @@ export default {
     // );
 
     //Get user location
-    this.geolocate();
+    if (this.form.coordinates == null) {
+      this.geolocate();
+    } else {
+      //this.center = this.form.coordinates;
+      this.center = {
+        lat: this.form.coordinates.Pc,
+        lng: this.form.coordinates.Vc
+      };
+    }
 
     //Get possible service types
-    db.collection("users").onSnapshot((querySnapshot) => {
+    db.collection("users").onSnapshot(querySnapshot => {
       var servicetypes = [
         "مصارف",
         "مخابز",
@@ -580,7 +607,7 @@ export default {
         "عيادات",
         "الجوازات",
         "قنصليات",
-        "مراكز حكومية",
+        "مراكز حكومية"
       ];
       querySnapshot.forEach(function(doc) {
         if (
@@ -615,7 +642,7 @@ export default {
           })
         }
     */
-  },
+  }
 };
 </script>
 <style scoped>

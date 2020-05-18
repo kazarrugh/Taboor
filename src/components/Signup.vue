@@ -74,13 +74,14 @@
           {{ error }}
         </b-alert>
 
-        <b-button @click="signUP" variant="primary">التسجيل</b-button>
-        <p>
+        <b-button @click="signUP" variant="success">تسجيل فرع جديد</b-button>
+        <!-- <b-button to="/Login" variant="primary">تسجيل الدخول</b-button> -->
+        <!-- <p>
           او الرجوع
           <router-link :to="'/Login?redirect=' + this.$route.query.redirect">
             لتسجيل الدخول</router-link
           >.
-        </p>
+        </p> -->
       </b-form>
     </b-container>
   </div>
@@ -101,7 +102,7 @@ export default {
       error: "",
       dismissSecs: 5,
       dismissCountDown: 0,
-      show: true,
+      show: true
     };
   },
   mounted() {},
@@ -111,7 +112,7 @@ export default {
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.email, this.password)
-        .then((created) => {
+        .then(created => {
           //console.log(created.user.uid);
           db.collection("users")
             .doc(created.user.uid)
@@ -124,14 +125,14 @@ export default {
               servicetype: null,
               coordinates: null,
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
               //First time user
               this.$router.push("Profile");
             });
         })
-        .catch((error) => {
+        .catch(error => {
           //this.errors.push(error.message);
           this.error = error.message;
           this.showAlert();
@@ -142,10 +143,10 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    },
+    }
   },
   beforeCreate() {},
-  created() {},
+  created() {}
 };
 </script>
 <style scoped>
@@ -161,8 +162,8 @@ input {
   padding: 15px;
   text-align: center;
 }
-button {
-  margin-top: 20px;
+.btn {
+  margin: 20px;
   cursor: pointer;
 }
 p {

@@ -1,56 +1,74 @@
 <template>
   <b-container class="container" :dir="dir">
-    <div v-if="renderComponent" />
-    <div v-for="(type, index) in servicetypes" v-bind:key="index">
-      <b-alert show variant="dark"
-        ><h4 class="servicetype-title">{{ type }}</h4></b-alert
+    <div class="margin-bottom">
+      <b-button
+        block
+        variant="outline-dark"
+        @click="geolocate"
+        v-if="mylocation == null"
+        size="lg"
       >
-      <br />
-      <!-- <div
-        style="width: 100px; 
-    height: 100px; 
-     background-image: url(https://firebasestorage.googleapis.com/v0/b/taboor-ly.appspot.com/o/Logos%2FUTMFtoyzEHXJVPGHHZankJ8gOGS2_200x200.jpg?alt=media&token=36f16637-9682-4a70-8c16-e231e881d123);"
-      /> -->
-      <VueSlickCarousel v-bind="carousel">
-        <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
-          <b-card
-            :header="pro.displayName"
-            style="max-width: 20rem;"
-            @click="viewprovider(pro.id)"
-          >
-            <!-- <b-card-img
-              style="padding:0px;vertical-align: middle;"
-              :src="pro.logo"
-            /> -->
-            <!-- <div :style='background-image: url('+pro.logo+');"></div> -->
-            <!-- <b-card-body>
-              
-            </b-card-body> -->
-            <b-list-group flush>
-              <b-list-group-item>
-                <div
-                  class="customimg"
-                  :style="'background-image: url(' + pro.logo + ');'"
-                ></div>
-              </b-list-group-item>
-              <!-- <b-list-group-item>
-                {{ pro.opentime }} - {{ pro.closetime }}
-              </b-list-group-item> -->
-            </b-list-group>
-            <a :href="'tel:' + pro.phoneNumber">
-              <b-card-footer>{{ pro.phoneNumber }}</b-card-footer>
-            </a>
-          </b-card>
-        </div>
-      </VueSlickCarousel>
-      <br /><br />
+        البحث في نطاق قريب
+      </b-button>
+      <b-button-group style="width:100%" v-if="mylocation != null">
+        <b-button @click="distance = 100" variant="outline-dark"
+          >100 متر</b-button
+        >
+        <b-button @click="distance = 200" variant="outline-dark"
+          >200 متر</b-button
+        >
+        <b-button @click="distance = 300" variant="outline-dark"
+          >300 متر</b-button
+        >
+      </b-button-group>
     </div>
+    <b-overlay :show="loading" rounded="sm">
+      <div v-for="(type, index) in uniqueservicetypes" v-bind:key="index">
+        <b-alert show variant="dark" class="margin-bottom">
+          <h4 class="servicetype-title">{{ type }}</h4>
+        </b-alert>
+
+        <VueSlickCarousel v-bind="carousel" class="margin-bottom">
+          <!-- <h2>1</h2>
+          <h2>2</h2>
+          <h2>3</h2>
+          <h2>4</h2> -->
+          <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
+            <b-card :header="pro.displayName" @click="viewprovider(pro.id)">
+              <b-list-group flush>
+                <b-list-group-item>
+                  <div
+                    class="customimg"
+                    :style="'background-image: url(' + pro.logo + ');'"
+                  ></div>
+                </b-list-group-item>
+              </b-list-group>
+              <a :href="'tel:' + pro.phoneNumber">
+                <b-card-footer>{{ pro.phoneNumber }}</b-card-footer>
+              </a>
+            </b-card>
+          </div>
+          <!-- In Case the array is empty, give empty div for slick -->
+          <div v-if="providerbycat(type).length == 0" />
+          <template #prevArrow="arrowOption">
+            <div class="custom-arrow">
+              {{ arrowOption.currentSlide }}/{{ arrowOption.slideCount }}
+            </div>
+          </template>
+          <template #nextArrow="arrowOption">
+            <div class="custom-arrow">
+              {{ arrowOption.currentSlide }}/{{ arrowOption.slideCount }}
+            </div>
+          </template>
+        </VueSlickCarousel>
+      </div>
+    </b-overlay>
   </b-container>
 </template>
 
 <script>
-import firebase from "../firebaseConfig.js";
-const db = firebase.firestore();
+//import firebase from "../firebaseConfig.js";
+// const db = firebase.firestore();
 
 import VueSlickCarousel from "vue-slick-carousel";
 import "vue-slick-carousel/dist/vue-slick-carousel.css";
@@ -59,21 +77,21 @@ import "vue-slick-carousel/dist/vue-slick-carousel-theme.css";
 
 export default {
   name: "Dashboard",
-  props: ["dir", "tr", "ur"],
+  props: ["dir", "ta", "ur", "providers"],
   data() {
     return {
-      providers: {},
-      renderComponent: true,
-      servicetypes: [],
+      loading: false,
+      mylocation: null,
+      distance: 1000,
       carousel: {
-        arrows: false,
+        arrows: true,
         dots: true,
         // rtl: true,
         focusOnSelect: false,
         infinite: true,
         speed: 500,
-        autoplay: true,
-        autoplaySpeed: 2500,
+        autoplay: false,
+        autoplaySpeed: 4000,
         slidesToShow: 4,
         slidesToScroll: 1,
         lazyLoad: "progressive",
@@ -87,100 +105,93 @@ export default {
               slidesToShow: 3,
               slidesToScroll: 3,
               infinite: true,
-              dots: true,
-            },
+              dots: true
+            }
           },
           {
             breakpoint: 600,
             settings: {
               slidesToShow: 2,
               slidesToScroll: 2,
-              initialSlide: 2,
-            },
+              initialSlide: 2
+            }
           },
           {
             breakpoint: 480,
             settings: {
+              arrows: false,
               touchThreshold: 3,
               slidesToShow: 1,
-              slidesToScroll: 1,
-            },
-          },
-        ],
-      },
+              slidesToScroll: 1
+            }
+          }
+        ]
+      }
     };
   },
   components: { VueSlickCarousel },
   computed: {
     providerbycat() {
-      return (type) =>
-        Object.values(this.providers).filter((m) => m.servicetype === type);
-      //return Object.values(this.providers);
+      return type =>
+        // Object.values(this.providers).filter(m => m.servicetype === type);
+        this.providerbygeopoint.filter(m => m.servicetype === type);
     },
+    providerbygeopoint() {
+      var filtered = Object.values(this.providers).filter(
+        m => m.displayName !== null
+      );
+      filtered = filtered.filter(m => m.logo !== null);
+      filtered = filtered.filter(m => m.phoneNumber !== null);
+
+      if (
+        this.mylocation != null &&
+        this.providers[
+          Object.keys(this.providers)[Object.keys(this.providers).length - 1]
+        ].distance &&
+        this.distance != null
+      ) {
+        return filtered.filter(m => m.distance <= this.distance);
+      } else {
+        return filtered;
+      }
+    },
+    uniqueservicetypes() {
+      const servicetypes = this.providerbygeopoint.map(a => a.servicetype);
+      return [...new Set(servicetypes)];
+    }
   },
+  watch: {},
   methods: {
     viewprovider(key) {
-      //console.log(key);
       this.$router.push({ path: "Provider", query: { key: key } });
     },
+
+    geolocate() {
+      this.loading = true;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          this.mylocation = {
+            Pc: position.coords.latitude,
+            Vc: position.coords.longitude
+          };
+          this.$emit("getdistance", this.mylocation);
+          this.loading = false;
+        });
+      } else {
+        console.log("Geolocation is not supported by this browser.");
+      }
+    }
   },
-  created() {
-    /*
-    db.collection("users")
-      .orderBy("servicetype")
-      .startAfter(null)
-      //   .select("servicetype")
-      .get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          //console.log(`${doc.id} => ${doc.data()}`);
-          this.servicetypes.push(doc.data());
-        });
-      });
-*/
-
-    db.collection("users")
-      .orderBy("servicetype")
-      .onSnapshot((querySnapshot) => {
-        this.renderComponent = false;
-
-        querySnapshot.forEach((doc) => {
-          //this.servicetypes.push(doc.data(), doc.id);
-          this.providers[doc.id] = doc.data();
-          this.providers[doc.id].id = doc.id;
-
-          //Get all the service types
-          if (
-            doc.data().servicetype != null &&
-            !this.servicetypes.includes(doc.data().servicetype)
-          ) {
-            this.servicetypes.push(doc.data().servicetype);
-          }
-        });
-
-        this.$nextTick(() => {
-          // Add the component back in
-          this.renderComponent = true;
-        });
-      });
-
-    /*
-       db.collection("servicetypes")
-      .get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          //console.log(`${doc.id} => ${doc.data()}`);
-          this.servicetypes.push(doc.data().servicetype);
-        });
-      });
-      */
-  },
+  created() {}
 };
 </script>
 
 <style scoped>
 .container {
   margin-top: 40px;
+  margin-bottom: 40px;
+}
+.margin-bottom {
   margin-bottom: 40px;
 }
 .servicetype-title {
@@ -206,6 +217,7 @@ export default {
 }
 .card {
   cursor: pointer;
+  margin: 5px;
 }
 .card-header {
   font-size: 18px;

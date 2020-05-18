@@ -7,7 +7,7 @@
         </b-col>
       </b-row>
 
-      <h3>SCAN THE QR CODE</h3>
+      <h4 class="container">صور الرمز بالكاميرا لطلب طابور</h4>
     </b-container>
   </div>
 </template>
@@ -32,4 +32,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.container {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+</style>

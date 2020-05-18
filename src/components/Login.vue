@@ -55,20 +55,45 @@
           >
             {{ error }}
           </b-alert>
-
-          <b-button
-            @click="signIN"
-            :disabled="loginbuttondisabled"
-            variant="primary"
-            >تسجيل الدخول</b-button
+          <div>
+            <b-button
+              @click="signIN"
+              :disabled="loginbuttondisabled"
+              variant="primary"
+              >تسجيل الدخول
+            </b-button>
+            <b-button @click="forgotpasswordmodal = true" variant="warning">
+              نسيت كلمة المرور
+            </b-button>
+            <b-button to="/Signup" variant="success">
+              فرع جديد
+            </b-button>
+          </div>
+          <b-modal
+            v-model="forgotpasswordmodal"
+            id="modal-forgot-password"
+            title="نسيت كلمة المرور"
+            ok-title="موافق"
+            cancel-title="الغاء الأمر"
+            @ok="resetpassword"
           >
-          <p style="font-size:16px;">
-            لا تملك حساب؟ يمكنك انشاء حساب جديد للفرع مقدم الخدمة
-            <router-link :to="'/Signup?redirect=' + this.$route.query.redirect"
-              >من هنا</router-link
+            <b-form-group
+              :style="'text-align: ' + ta + ';'"
+              id="input-group-1"
+              label="البريد الالكتروني:"
+              label-for="input-1"
+              class="input-title"
             >
-            <br /><br />
-          </p>
+              <b-form-input
+                id="input-1"
+                v-model="email"
+                type="text"
+                required
+                dir="ltr"
+                placeholder="البريد الإلكتروني لتسجيل الدخول"
+              ></b-form-input>
+            </b-form-group>
+          </b-modal>
         </b-form>
       </b-overlay>
     </b-container>
@@ -89,23 +114,36 @@ export default {
       dismissSecs: 5,
       dismissCountDown: 0,
       loginbuttondisabled: false,
+      forgotpasswordmodal: false,
       show: true,
-      loading: false,
+      loading: false
     };
   },
   props: ["dir", "ta", "ur"],
   methods: {
+    resetpassword() {
+      firebase
+        .auth()
+        .sendPasswordResetEmail(this.email)
+        .then(() => {
+          this.error = "تم ارسال بريد الكتروني لتدوين كلمة مرور جديدة";
+          this.showAlert();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
     signIN() {
       this.loading = true;
       firebase
         .auth()
         .signInWithEmailAndPassword(this.email, this.password)
-        .then((loggedin) => {
+        .then(loggedin => {
           //Update Last Login Time
           db.collection("users")
             .doc(loggedin.user.uid)
             .update({
-              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
             });
           this.loginbuttondisabled = true;
           var redirect = this.$route.query.redirect;
@@ -115,7 +153,7 @@ export default {
             window.location.href = "/";
           }
         })
-        .catch((error) => {
+        .catch(error => {
           this.loading = false;
           this.loginbuttondisabled = false;
           if (
@@ -127,6 +165,8 @@ export default {
             error.message ==
             "There is no user record corresponding to this identifier. The user may have been deleted."
           ) {
+            this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
+          } else if (error.message == "The email address is badly formatted.") {
             this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
           } else {
             this.error = error.message;
@@ -140,9 +180,9 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    },
+    }
   },
-  created() {},
+  created() {}
 };
 </script>
 <style scoped>
@@ -161,8 +201,8 @@ input {
   padding: 15px;
   text-align: center;
 }
-button {
-  margin-top: 20px;
+.btn {
+  margin: 10px;
   cursor: pointer;
 }
 p {
