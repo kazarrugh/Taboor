@@ -7,7 +7,9 @@
         </b-col>
       </b-row>
 
-      <h4 class="container">صور الرمز بالكاميرا لطلب طابور</h4>
+      <h4 class="container">
+        {{ $t("text.usecamera") }}
+      </h4>
     </b-container>
   </div>
 </template>
@@ -15,7 +17,7 @@
 <script>
 export default {
   name: "QrScan",
-  props: ["ur", "dir", "td"],
+  props: ["ur", "dir", "ta"],
   data() {
     return {};
   },

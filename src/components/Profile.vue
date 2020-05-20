@@ -2,14 +2,16 @@
   <div>
     <b-container class="container" :dir="dir">
       <b-overlay :show="loading" rounded="sm">
-        <h3>ملف تعريف الفرع</h3>
+        <h3>
+          {{ $t("text.profile") }}
+        </h3>
         <b-form v-if="show" @submit.prevent="updateProfile">
           <b-row align-h="center">
             <b-col sm="6">
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1"
-                label="إسم الفرع:"
+                :label="$t('labels.branch')"
                 label-for="input-1"
                 class="input-title"
               >
@@ -18,14 +20,14 @@
                   v-model="form.displayName"
                   type="text"
                   required
-                  placeholder="اسم فرع موزع الخدمة او الشركة"
+                  :placeholder="$t('text.branch_name')"
                 ></b-form-input>
               </b-form-group>
 
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="رقم الهاتف:"
+                :label="$t('labels.phone')"
                 label-for="input-1a"
                 class="input-title"
               >
@@ -44,7 +46,7 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="نوع النشاط:"
+                :label="$t('labels.servicetype')"
                 label-for="input-1a"
                 class="input-title"
               >
@@ -63,14 +65,14 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="انواع الخدمات:"
+                :label="$t('labels.servicewindow')"
                 label-for="input-1a"
                 class="input-title"
               >
                 <b-form-tags
                   v-model="form.windowtype"
-                  placeholder="   كل نوع خدمة له طابور خاص "
-                  addButtonText="اضافة"
+                  :placeholder="$t('text.servicewindow')"
+                  :addButtonText="$t('buttons.addButton')"
                   addButtonVariant="primary"
                   tag-variant="primary"
                   size="md"
@@ -84,14 +86,14 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="بداية ساعات العمل:"
+                :label="$t('labels.opentime')"
                 label-for="input-1a"
                 class="input-title"
               >
                 <b-form-timepicker
                   size="md"
-                  locale="ar-ly"
-                  placeholder="لم يتم تحديد الوقت"
+                  :locale="lang"
+                  :placeholder="$t('text.timenotset')"
                   v-model="form.opentime"
                 ></b-form-timepicker>
               </b-form-group>
@@ -99,13 +101,13 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="نهاية ساعات العمل:"
+                :label="$t('labels.closetime')"
                 label-for="input-1a"
                 class="input-title"
               >
                 <b-form-timepicker
-                  locale="ar-ly"
-                  placeholder="لم يتم تحديد الوقت"
+                  :locale="lang"
+                  :placeholder="$t('text.timenotset')"
                   v-model="form.closetime"
                 ></b-form-timepicker>
               </b-form-group>
@@ -113,7 +115,7 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1a"
-                label="الشعار:"
+                :label="$t('labels.logo')"
                 label-for="input-1a"
                 class="input-title"
               >
@@ -137,9 +139,9 @@
               <b-modal
                 v-model="mapmodal"
                 id="modal-map"
-                title="الموقع في الخريطة"
-                ok-title="موافق"
-                cancel-title="الغاء الأمر"
+                :title="$t('text.maplocation')"
+                :ok-title="$t('buttons.ok')"
+                :cancel-title="$t('buttons.cancel')"
                 @ok="updateProfile"
                 :dir="dir"
               >
@@ -165,7 +167,7 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-2"
-                label="البريد الإلكتروني:"
+                :label="$t('labels.email')"
                 label-for="input-2"
                 class="input-title"
               >
@@ -175,7 +177,7 @@
                   v-model="form.email"
                   type="text"
                   required
-                  placeholder="البريد الالكتروني للفرع"
+                  :placeholder="$t('text.email_branch')"
                 ></b-form-input>
               </b-form-group>
 
@@ -188,15 +190,17 @@
                 {{ alertmsg }}
               </b-alert>
 
-              <b-button type="submit" variant="primary">تخزين</b-button>
+              <b-button type="submit" variant="primary">
+                {{ $t("buttons.save") }}
+              </b-button>
 
-              <b-button @click="passwordmodal = true" variant="warning"
-                >تغيير كلمة المرور</b-button
-              >
+              <b-button @click="passwordmodal = true" variant="warning">
+                {{ $t("text.passwordchange") }}
+              </b-button>
 
-              <b-button @click="mapmodal = true" variant="warning"
-                >تغيير الاحداثيات</b-button
-              >
+              <b-button @click="mapmodal = true" variant="info">
+                {{ $t("buttons.changecord") }}
+              </b-button>
             </b-col>
           </b-row>
         </b-form>
@@ -204,9 +208,9 @@
       <b-modal
         v-model="passwordmodal"
         id="modal-1"
-        title="تغيير كلمة المرور"
-        ok-title="موافق"
-        cancel-title="الغاء الأمر"
+        :title="$t('text.passwordchange')"
+        :ok-title="$t('buttons.ok')"
+        :cancel-title="$t('buttons.cancel')"
         @ok="updatePasswordconfirmlogin"
         :ok-disabled="!validconfirmpassword"
         :dir="dir"
@@ -214,7 +218,7 @@
         <b-form-group
           :style="'text-align: ' + ta + ';'"
           id="input-group-3"
-          label="كلمة المرور الجديدة:"
+          :label="$t('labels.newpassword')"
           label-for="input-2"
           class="input-title"
           :dir="dir"
@@ -225,14 +229,14 @@
             v-model="newPassword"
             type="password"
             :state="validnewpassword"
-            placeholder="كلمة مرور تتكون من اكثر من 6 حروف او ارقام"
+            :placeholder="$t('text.passwordmin', { value: 6 })"
           ></b-form-input>
         </b-form-group>
 
         <b-form-group
           :style="'text-align: ' + ta + ';'"
           id="input-group-3"
-          label="كلمة المرور الحالية:"
+          :label="$t('labels.curpassword')"
           label-for="input-2"
           class="input-title"
           :dir="dir"
@@ -243,16 +247,16 @@
             v-model="password"
             type="password"
             :state="validpassword"
-            placeholder="كلمة المرور القديمة"
+            :placeholder="$t('text.oldpassword')"
           ></b-form-input>
         </b-form-group>
       </b-modal>
       <b-modal
         v-model="emailmodal"
         id="modal-2"
-        title="تأكيد كلمة المرور"
-        ok-title="موافق"
-        cancel-title="الغاء الأمر"
+        :title="$t('text.confirmpassword')"
+        :ok-title="$t('buttons.ok')"
+        :cancel-title="$t('buttons.cancel')"
         @ok="updateProfile"
         :ok-disabled="!validpassword"
         :dir="dir"
@@ -260,7 +264,7 @@
         <b-form-group
           :style="'text-align: ' + ta + ';'"
           id="input-group-3"
-          label="كلمة المرور الحالية:"
+          :label="$t('labels.curpassword')"
           label-for="input-2"
           class="input-title"
           :dir="dir"
@@ -270,7 +274,7 @@
             id="input-3a"
             v-model="password"
             type="password"
-            placeholder="كلمة المرور القديمة"
+            :placeholder="$t('text.oldpassword')"
             :state="validpassword"
           ></b-form-input>
         </b-form-group>
@@ -317,13 +321,13 @@ export default {
       alertmsg: "",
       alertcolor: "",
       dismissSecs: 5,
-      dismissCountDown: 0
+      dismissCountDown: 0,
     };
   },
-  props: ["dir", "ta", "ur"],
+  props: ["dir", "ta", "ur", "lang"],
   components: {
     VuePhoneNumberInput,
-    filepond
+    filepond,
   },
   computed: {
     validpassword: function() {
@@ -337,11 +341,12 @@ export default {
     validconfirmpassword: function() {
       if (this.validpassword && this.validnewpassword) return true;
       else return false;
-    }
+    },
   },
   methods: {
     convertphone(payload) {
-      this.form.phoneNumber = payload.formattedNumber;
+      this.form.phoneNumber = payload.phoneNumber;
+      this.form.formattedNumber = payload.formattedNumber;
     },
     savefilepath(arrayofpaths) {
       var filepath = arrayofpaths[arrayofpaths.length - 1];
@@ -350,7 +355,7 @@ export default {
           .doc(this.ur.uid)
           .update({
             logo: filepath,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
         this.changephoto = false;
       }, 5000);
@@ -365,7 +370,7 @@ export default {
           firebase
             .auth()
             .signInWithEmailAndPassword(this.originalemail, this.password)
-            .then(signedin => {
+            .then((signedin) => {
               signedin.user
                 .updateEmail(this.form.email)
                 .then(() => {
@@ -375,12 +380,12 @@ export default {
                   this.loading = false;
                   this.password = null;
                 })
-                .catch(error => {
+                .catch((error) => {
                   this.password = null;
                   //Get Translated Error Message
                   db.collection("translations")
                     .add({
-                      input: error.message
+                      input: error.message,
                     })
                     .then(function(docRef) {
                       //console.log("Document written with ID: ", docRef.id);
@@ -394,21 +399,21 @@ export default {
                   //End Translated error
                 });
             })
-            .catch(error => {
+            .catch((error) => {
               this.password = null;
               //Get Translated Error Message
               db.collection("translations")
                 .add({
-                  input: error.message
+                  input: error.message,
                 })
-                .then(docRef => {
+                .then((docRef) => {
                   console.log("docRef: ", docRef);
                   console.log("translations written with ID: ", docRef.id);
                   setTimeout(() => {
                     db.collection("translations")
                       .doc(docRef.id)
                       .get()
-                      .then(doc => {
+                      .then((doc) => {
                         this.loading = false;
                         console.log(doc.data().translated.ar);
                         this.alertmsg = doc.data().translated.ar;
@@ -444,12 +449,13 @@ export default {
           displayName: this.form.displayName,
           email: this.form.email,
           phoneNumber: this.form.phoneNumber,
+          formattedNumber: this.form.formattedNumber,
           opentime: this.form.opentime,
           closetime: this.form.closetime,
           servicetype: this.form.servicetype,
           windowtype: this.form.windowtype,
           coordinates: this.form.coordinates,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         })
         .then(() => {
           this.alertmsg = "تم التخزين بنجاح";
@@ -462,7 +468,7 @@ export default {
       firebase
         .auth()
         .signInWithEmailAndPassword(this.originalemail, this.password)
-        .then(signedin => {
+        .then((signedin) => {
           signedin.user
             .updatePassword(this.newPassword)
             .then(() => {
@@ -473,20 +479,20 @@ export default {
               this.alertcolor = "success";
               this.showAlert();
             })
-            .catch(error => {
+            .catch((error) => {
               this.password = null;
               this.newPassword = null;
               //Get Translated Error Message
               db.collection("translations")
                 .add({
-                  input: error.message
+                  input: error.message,
                 })
-                .then(docRef => {
+                .then((docRef) => {
                   setTimeout(() => {
                     db.collection("translations")
                       .doc(docRef.id)
                       .get()
-                      .then(doc => {
+                      .then((doc) => {
                         this.loading = false;
                         this.alertmsg = doc.data().translated.ar;
                         this.alertcolor = "danger";
@@ -502,20 +508,20 @@ export default {
               //End Translated error
             });
         })
-        .catch(error => {
+        .catch((error) => {
           this.password = null;
           this.newPassword = null;
           //Get Translated Error Message
           db.collection("translations")
             .add({
-              input: error.message
+              input: error.message,
             })
-            .then(docRef => {
+            .then((docRef) => {
               setTimeout(() => {
                 db.collection("translations")
                   .doc(docRef.id)
                   .get()
-                  .then(doc => {
+                  .then((doc) => {
                     this.loading = false;
                     this.alertmsg = doc.data().translated.ar;
                     this.alertcolor = "danger";
@@ -536,10 +542,10 @@ export default {
     geolocate() {
       //console.log("gettinglocation");
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
+        navigator.geolocation.getCurrentPosition((position) => {
           this.center = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           };
           this.form.coordinates = new firebase.firestore.GeoPoint(
             position.coords.latitude,
@@ -559,7 +565,7 @@ export default {
       );
       this.center = {
         lat: evnt.lat(),
-        lng: evnt.lng()
+        lng: evnt.lng(),
       };
     },
     countDownChanged(dismissCountDown) {
@@ -567,7 +573,7 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    }
+    },
   },
   created() {
     // Object.assign(this.form, this.ur);
@@ -588,12 +594,12 @@ export default {
       //this.center = this.form.coordinates;
       this.center = {
         lat: this.form.coordinates.Pc,
-        lng: this.form.coordinates.Vc
+        lng: this.form.coordinates.Vc,
       };
     }
 
     //Get possible service types
-    db.collection("users").onSnapshot(querySnapshot => {
+    db.collection("users").onSnapshot((querySnapshot) => {
       var servicetypes = [
         "مصارف",
         "مخابز",
@@ -607,7 +613,7 @@ export default {
         "عيادات",
         "الجوازات",
         "قنصليات",
-        "مراكز حكومية"
+        "مراكز حكومية",
       ];
       querySnapshot.forEach(function(doc) {
         if (
@@ -642,7 +648,7 @@ export default {
           })
         }
     */
-  }
+  },
 };
 </script>
 <style scoped>
@@ -650,10 +656,21 @@ export default {
   margin-top: 40px;
   margin-bottom: 40px;
 }
+.input-title {
+  font-size: 1.1rem;
+}
 .form-control {
+  height: 2.5em;
+  min-height: 2.5em;
+  font-size: 1.1rem;
   margin: 10px 0;
   padding: 15px;
   text-align: center;
+}
+@media only screen and (max-width: 400px) {
+  .form-control {
+    font-size: 0.8em;
+  }
 }
 button {
   margin: 20px;

@@ -9,7 +9,7 @@
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
           :options="this.provider.windowtype"
-          placeholder="نوع الخدمة المقدمة"
+          :placeholder="$t('select.typeofservice')"
           v-model="servicewindow"
           :dir="dir"
         >
@@ -25,7 +25,8 @@
         <br /><br />
         <v-select
           :options="totalwindows"
-          placeholder="رقم شباك مقدم الخدمة"
+          :reduce="(option) => option.value"
+          :placeholder="$t('select.windownumberselect')"
           v-model="mywindow"
           :dir="dir"
         >
@@ -46,13 +47,19 @@
           variant="outline-primary"
           type="submit"
           size="lg"
-          >الرقم التالي</b-button
         >
-        <div style="font-size: 18px;" v-if="servingnumber">
+          {{ $t("buttons.nextnumber") }}
+        </b-button>
+        <!-- v-if="servingnumber" -->
+        <div v-if="servingnumber">
           <br /><br />
-          <b-alert variant="primary" show
-            >الرقم الحالي {{ servingnumber }}</b-alert
-          >
+          <b-alert variant="primary" show>
+            <h2>{{ $t("alerts.currentnumber", { value: servingnumber }) }}</h2>
+            <div v-if="distance">
+              <br />
+              <h5>{{ $t("alerts.distance", { value: distance }) }}</h5>
+            </div>
+          </b-alert>
         </div>
       </b-form>
 
@@ -73,6 +80,15 @@
         :ta="ta"
       />
       <!-- end current total numbers -->
+      <!-- Start customer reviews -->
+      <Reviews
+        :ur="provider"
+        :pk="ur.uid"
+        :servicewindow="servicewindow"
+        :dir="dir"
+        :ta="ta"
+      />
+      <!-- End customer reviews -->
     </div>
   </b-container>
 </template>
@@ -81,24 +97,28 @@
 import ProviderContact from "@/components/ProviderContact";
 import Display from "@/components/Display";
 import TotalNumbers from "@/components/TotalNumbers";
+import getDistance from "geolib/es/getDistance";
+import Reviews from "@/components/Reviews";
 
 import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "Serve",
-  props: ["ur", "dir", "ta"],
+  props: ["ur", "dir", "ta", "providers"],
   data() {
     return {
       provider: {},
       servicewindow: null,
       mywindow: null,
-      servingnumber: null
+      servingnumber: null,
+      distance: null,
     };
   },
   components: {
     ProviderContact,
     Display,
-    TotalNumbers
+    Reviews,
+    TotalNumbers,
   },
   computed: {
     md() {
@@ -136,15 +156,18 @@ export default {
     },
     totalwindows() {
       var tw = [];
+      var label = this.$t("select.windownumber");
+
       for (var i = 1; i < 21; i++) {
-        tw.push(i);
+        tw.push({ label: label + i, value: i });
       }
       return tw;
-    }
+    },
   },
   methods: {
     getnumber(evt) {
       evt.preventDefault();
+      this.distance = null;
 
       if (this.provider.currentlyserving == null) {
         this.provider.currentlyserving = {};
@@ -154,16 +177,19 @@ export default {
         this.provider.currentlyserving[this.servicewindow] = {};
       }
 
-      // if (
-      //   this.provider.currentlyserving[this.servicewindow][this.mywindow] !=
-      //   null
-      // ) {
-      //   this.servingnumber =
-      //     this.provider.currentlyserving[this.servicewindow][this.mywindow] + 1;
-      // } else {
-      //   this.servingnumber = 1;
-      // }
+      //Delete cordinates of the last served number
+      db.collection("users")
+        .doc(this.ur.uid)
+        .update({
+          ["clientlocations." +
+          this.servicewindow +
+          "." +
+          this.servingnumber]: firebase.firestore.FieldValue.delete(),
+        });
+
+      //Set serving number to be the next number
       this.servingnumber = this.nextnumber;
+
       //Update local data object
       this.provider.currentlyserving[this.servicewindow][
         this.mywindow
@@ -173,25 +199,48 @@ export default {
       db.collection("users")
         .doc(this.ur.uid)
         .update({
-          currentlyserving: this.provider.currentlyserving
+          currentlyserving: this.provider.currentlyserving,
         });
-    }
+
+      //Check distance with the client
+
+      if (
+        this.provider.clientlocations &&
+        this.provider.clientlocations[this.servicewindow] &&
+        this.provider.clientlocations[this.servicewindow][this.servingnumber]
+      ) {
+        var clientcoordinates = this.provider.clientlocations[
+          this.servicewindow
+        ][this.servingnumber];
+      }
+      if (this.provider.coordinates != null && clientcoordinates != null) {
+        this.distance = getDistance(
+          { latitude: clientcoordinates.Pc, longitude: clientcoordinates.Vc },
+          {
+            latitude: this.provider.coordinates.Pc,
+            longitude: this.provider.coordinates.Vc,
+          }
+        );
+      }
+
+      //End Distance
+    },
   },
   beforeCreate() {},
   created() {
     db.collection("users")
       .doc(this.ur.uid)
-      .onSnapshot(doc => {
+      .onSnapshot((doc) => {
         this.provider = doc.data();
         if (
           this.provider.windowtype == null ||
-          this.provider.windowtype.length < 2
+          this.provider.windowtype.length == 0
         ) {
           this.servicewindow = "اجمالي عدد الطابور";
         }
       });
   },
-  mounted() {}
+  mounted() {},
 };
 </script>
 

@@ -13,7 +13,7 @@
 <script>
 export default {
   name: "HelloWorld",
-  props: ["ur", "dir", "td"],
+  props: ["ur", "dir", "ta"],
   data() {
     return {};
   },

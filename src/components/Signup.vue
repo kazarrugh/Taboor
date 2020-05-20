@@ -1,15 +1,17 @@
 <template>
   <div>
     <b-container class="container" :dir="dir">
-      <b-form v-if="show">
-        <h3>نموذج التسجيل</h3>
+      <b-form v-if="show" @submit="signUP">
+        <h3>
+          {{ $t("nav.registration") }}
+        </h3>
 
         <b-row align-h="center">
           <b-col sm="6">
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-0"
-              label="إسم الفرع:"
+              :label="$t('labels.branch')"
               label-for="input-0"
               class="input-title"
             >
@@ -18,7 +20,7 @@
                 v-model="name"
                 type="text"
                 required
-                placeholder="اسم فرع موزع الخدمة او الشركة"
+                :placeholder="$t('text.branch_name')"
               ></b-form-input>
             </b-form-group>
           </b-col>
@@ -28,7 +30,7 @@
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-1"
-              label="البريد الإلكتروني:"
+              :label="$t('labels.email')"
               label-for="input-1"
               class="input-title"
             >
@@ -38,7 +40,7 @@
                 type="email"
                 dir="ltr"
                 required
-                placeholder="البريد الالكتروني للفرع"
+                :placeholder="$t('text.email_branch')"
               ></b-form-input>
             </b-form-group>
           </b-col>
@@ -48,7 +50,7 @@
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-2"
-              label="كلمة المرور:"
+              :label="$t('labels.password')"
               label-for="input-2"
               class="input-title"
             >
@@ -59,7 +61,7 @@
                 dir="ltr"
                 min="6"
                 required
-                placeholder="كلمة مرور تتكون من اكثر من 6 حروف او ارقام"
+                :placeholder="$t('text.passwordmin', { value: 6 })"
               ></b-form-input>
             </b-form-group>
           </b-col>
@@ -74,7 +76,9 @@
           {{ error }}
         </b-alert>
 
-        <b-button @click="signUP" variant="success">تسجيل فرع جديد</b-button>
+        <b-button type="submit" variant="success">
+          {{ $t("buttons.register") }}
+        </b-button>
         <!-- <b-button to="/Login" variant="primary">تسجيل الدخول</b-button> -->
         <!-- <p>
           او الرجوع
@@ -92,7 +96,7 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 
 export default {
-  props: ["dir", "ta"],
+  props: ["dir", "ta", "lang"],
   data() {
     return {
       name: "",
@@ -102,17 +106,18 @@ export default {
       error: "",
       dismissSecs: 5,
       dismissCountDown: 0,
-      show: true
+      show: true,
     };
   },
   mounted() {},
   methods: {
-    signUP: function() {
+    signUP(evt) {
+      evt.preventDefault();
       //this.name =  this.name.replace(/(^\w{1})|(\s{1}\w{1})/g, match => match.toUpperCase());
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.email, this.password)
-        .then(created => {
+        .then((created) => {
           //console.log(created.user.uid);
           db.collection("users")
             .doc(created.user.uid)
@@ -120,19 +125,23 @@ export default {
               displayName: this.name,
               email: this.email,
               phoneNumber: null,
+              formattedNumber: null,
               opentime: null,
               closetime: null,
               servicetype: null,
+              windowtype: null,
               coordinates: null,
+              avgRating: null,
+              numRatings: null,
               createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             })
             .then(() => {
               //First time user
               this.$router.push("Profile");
             });
         })
-        .catch(error => {
+        .catch((error) => {
           //this.errors.push(error.message);
           this.error = error.message;
           this.showAlert();
@@ -143,10 +152,10 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    }
+    },
   },
   beforeCreate() {},
-  created() {}
+  created() {},
 };
 </script>
 <style scoped>
@@ -173,5 +182,21 @@ p {
 p a {
   text-decoration: underline;
   cursor: pointer;
+}
+.input-title {
+  font-size: 1.1rem;
+}
+.form-control {
+  height: 2.5em;
+  min-height: 2.5em;
+  font-size: 1.1rem;
+  margin: 10px 0;
+  padding: 15px;
+  text-align: center;
+}
+@media only screen and (max-width: 400px) {
+  .form-control {
+    font-size: 0.8em;
+  }
 }
 </style>

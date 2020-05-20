@@ -8,18 +8,18 @@
         v-if="mylocation == null"
         size="lg"
       >
-        البحث في نطاق قريب
+        {{ $t("buttons.near") }}
       </b-button>
       <b-button-group style="width:100%" v-if="mylocation != null">
-        <b-button @click="distance = 100" variant="outline-dark"
-          >100 متر</b-button
-        >
-        <b-button @click="distance = 200" variant="outline-dark"
-          >200 متر</b-button
-        >
-        <b-button @click="distance = 300" variant="outline-dark"
-          >300 متر</b-button
-        >
+        <b-button @click="distance = 100" variant="outline-dark">
+          {{ $t("buttons.metres", { value: "100" }) }}
+        </b-button>
+        <b-button @click="distance = 200" variant="outline-dark">
+          {{ $t("buttons.metres", { value: "200" }) }}
+        </b-button>
+        <b-button @click="distance = 300" variant="outline-dark">
+          {{ $t("buttons.metres", { value: "300" }) }}
+        </b-button>
       </b-button-group>
     </div>
     <b-overlay :show="loading" rounded="sm">
@@ -44,7 +44,10 @@
                 </b-list-group-item>
               </b-list-group>
               <a :href="'tel:' + pro.phoneNumber">
-                <b-card-footer>{{ pro.phoneNumber }}</b-card-footer>
+                <b-card-footer>
+                  <b-icon-phone />
+                  {{ pro.phoneNumber }}
+                </b-card-footer>
               </a>
             </b-card>
           </div>
@@ -62,6 +65,7 @@
           </template>
         </VueSlickCarousel>
       </div>
+      <!-- <div dir="ltr">{{ this.time }}</div> -->
     </b-overlay>
   </b-container>
 </template>
@@ -77,7 +81,7 @@ import "vue-slick-carousel/dist/vue-slick-carousel-theme.css";
 
 export default {
   name: "Dashboard",
-  props: ["dir", "ta", "ur", "providers"],
+  props: ["dir", "ta", "ur", "providers", "time"],
   data() {
     return {
       loading: false,
@@ -105,16 +109,16 @@ export default {
               slidesToShow: 3,
               slidesToScroll: 3,
               infinite: true,
-              dots: true
-            }
+              dots: true,
+            },
           },
           {
             breakpoint: 600,
             settings: {
               slidesToShow: 2,
               slidesToScroll: 2,
-              initialSlide: 2
-            }
+              initialSlide: 2,
+            },
           },
           {
             breakpoint: 480,
@@ -122,26 +126,26 @@ export default {
               arrows: false,
               touchThreshold: 3,
               slidesToShow: 1,
-              slidesToScroll: 1
-            }
-          }
-        ]
-      }
+              slidesToScroll: 1,
+            },
+          },
+        ],
+      },
     };
   },
   components: { VueSlickCarousel },
   computed: {
     providerbycat() {
-      return type =>
+      return (type) =>
         // Object.values(this.providers).filter(m => m.servicetype === type);
-        this.providerbygeopoint.filter(m => m.servicetype === type);
+        this.providerbygeopoint.filter((m) => m.servicetype === type);
     },
     providerbygeopoint() {
       var filtered = Object.values(this.providers).filter(
-        m => m.displayName !== null
+        (m) => m.displayName !== null
       );
-      filtered = filtered.filter(m => m.logo !== null);
-      filtered = filtered.filter(m => m.phoneNumber !== null);
+      filtered = filtered.filter((m) => m.logo !== null);
+      filtered = filtered.filter((m) => m.phoneNumber !== null);
 
       if (
         this.mylocation != null &&
@@ -150,15 +154,15 @@ export default {
         ].distance &&
         this.distance != null
       ) {
-        return filtered.filter(m => m.distance <= this.distance);
+        return filtered.filter((m) => m.distance <= this.distance);
       } else {
         return filtered;
       }
     },
     uniqueservicetypes() {
-      const servicetypes = this.providerbygeopoint.map(a => a.servicetype);
+      const servicetypes = this.providerbygeopoint.map((a) => a.servicetype);
       return [...new Set(servicetypes)];
-    }
+    },
   },
   watch: {},
   methods: {
@@ -169,10 +173,10 @@ export default {
     geolocate() {
       this.loading = true;
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
+        navigator.geolocation.getCurrentPosition((position) => {
           this.mylocation = {
             Pc: position.coords.latitude,
-            Vc: position.coords.longitude
+            Vc: position.coords.longitude,
           };
           this.$emit("getdistance", this.mylocation);
           this.loading = false;
@@ -180,9 +184,9 @@ export default {
       } else {
         console.log("Geolocation is not supported by this browser.");
       }
-    }
+    },
   },
-  created() {}
+  created() {},
 };
 </script>
 
@@ -220,7 +224,7 @@ export default {
   margin: 5px;
 }
 .card-header {
-  font-size: 18px;
+  font-size: 1.3em;
 }
 .card-body {
   padding: 0px;
@@ -230,6 +234,7 @@ export default {
 }
 .card-footer {
   direction: ltr;
+  font-size: 1.3em;
 }
 
 a {

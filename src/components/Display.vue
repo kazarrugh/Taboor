@@ -8,7 +8,9 @@
             Object.keys(this.provider.currentlyserving).length > 0
         "
       >
-        <b-alert show variant="dark">الارقام التي يتم خدمتها</b-alert>
+        <b-alert show variant="dark" class="bold">
+          {{ $t("alerts.currentlyserved") }}
+        </b-alert>
         <b-row v-if="servicewindow == null" fluid>
           <b-col
             v-for="(cn, label) in provider.currentlyserving"
@@ -27,8 +29,14 @@
                   v-for="(number, window) in cn"
                   v-bind:key="window"
                 >
-                  <b-col class="bordered"> شباك: {{ window }} </b-col>
-                  <b-col class="bordered"> رقم: {{ number }} </b-col>
+                  <b-col class="bordered">
+                    {{ $t("labels.window") }}
+                    <span class="bold">{{ window }}</span>
+                  </b-col>
+                  <b-col class="bordered">
+                    {{ $t("labels.number") }}
+                    <span class="bold">{{ number }}</span>
+                  </b-col>
                 </b-row>
               </b-card-body>
             </b-card>
@@ -49,8 +57,12 @@
               ]"
               v-bind:key="window"
             >
-              <b-col class="bordered"> شباك: {{ window }} </b-col>
-              <b-col class="bordered"> رقم: {{ number }} </b-col>
+              <b-col class="bordered">
+                {{ $t("labels.window") }} <span class="bold">{{ window }}</span>
+              </b-col>
+              <b-col class="bordered">
+                {{ $t("labels.number") }} <span class="bold">{{ number }}</span>
+              </b-col>
             </b-row>
           </b-card-body>
         </b-card>
@@ -63,7 +75,7 @@
 <script>
 export default {
   name: "Display",
-  props: ["ur", "servicewindow", "dir", "td"],
+  props: ["ur", "servicewindow", "dir", "ta"],
   data() {
     return {
       //provider: {},
@@ -72,7 +84,7 @@ export default {
   },
   computed: {
     cols() {
-      if (Object.keys(this.provider.currentnumber).length > 1) return 6;
+      if (Object.keys(this.provider.currentnumber).length > 1) return 12;
       else return 12;
     },
     md() {
@@ -99,8 +111,12 @@ export default {
           largestwindows = counter;
         }
       }
-
-      return largestwindows * 50 + 50;
+      if (window.innerWidth < 400) {
+        var cardhead = 46;
+      } else {
+        cardhead = 49;
+      }
+      return largestwindows * 50 + cardhead;
     },
     provider() {
       return this.ur;
@@ -136,10 +152,11 @@ export default {
 .card-body {
   padding: 0px;
 }
+
 .bordered {
   border: 1px solid rgba(0, 0, 0, 0.125);
   border-style: solid;
-  font-size: 0.4 em;
+  font-size: 1em;
   padding: 0px;
   height: 50px;
 
@@ -148,5 +165,14 @@ export default {
 
   line-height: 50px;
   text-align: center;
+}
+
+@media only screen and (max-width: 400px) {
+  .bordered {
+    font-size: 1.1em;
+  }
+  .card {
+    font-size: 0.9em;
+  }
 }
 </style>

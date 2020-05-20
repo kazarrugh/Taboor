@@ -7,7 +7,7 @@
       <v-select
         v-if="ur.windowtype && ur.windowtype.length > 1"
         :options="this.ur.windowtype"
-        placeholder="نوع الخدمة المقدمة"
+        :placeholder="$t('select.typeofservice')"
         v-model="servicewindow"
         :dir="dir"
       >
@@ -15,34 +15,25 @@
       <br />
       <v-select
         :options="totalwindows"
-        placeholder="رقم شباك مقدم الخدمة"
+        :reduce="(option) => option.value"
+        :placeholder="$t('select.windownumberselect')"
         v-model="mywindow"
         :dir="dir"
       >
       </v-select>
       <br />
-      <b-button block variant="outline-primary" size="lg" @click="printwindow"
-        >طباعة
+      <b-button block variant="outline-primary" size="lg" @click="printwindow">
+        {{ $t("buttons.print") }}
       </b-button>
-      <div class="printlabel" v-if="servicewindow || mywindow">
-        <div v-if="servicewindow" class="bigtext">خدمة {{ servicewindow }}</div>
-        <div v-if="mywindow" class="bigtext">{{ mywindow }} شباك رقم</div>
-      </div>
 
-      <!-- <div
-        class="h-100 row align-items-center container"
-        v-if="servicewindow || mywindow"
-      >
-        <b-jumbotron
-          fluid
-          container-fluid
-          :header="'خدمة ' + servicewindow"
-          :lead="'شباك رقم ' + mywindow"
-          style="width:100%;"
-        >
-        </b-jumbotron>
-        <br />
-      </div> -->
+      <div class="printlabel" v-if="servicewindow || mywindow">
+        <div v-if="servicewindow" class="bigtext">
+          {{ $t("text.service") }} {{ servicewindow }}
+        </div>
+        <div v-if="mywindow" class="bigtext ">
+          {{ $t("select.windownumber") }} {{ mywindow }}
+        </div>
+      </div>
 
       <qrcode-vue
         v-if="!servicewindow && !mywindow"
@@ -51,7 +42,9 @@
         level="H"
         class="container"
       ></qrcode-vue>
-      <h4 class="container">صور الرمز بالكاميرا لطلب طابور</h4>
+      <h4 class="container" v-if="!servicewindow && !mywindow">
+        {{ $t("text.usecamera") }}
+      </h4>
 
       <!-- <div class="divcenter container">
         <img src="../assets/logo.svg" class="taboorlogo" />
@@ -79,16 +72,16 @@ import ProviderContact from "@/components/ProviderContact";
 import QrcodeVue from "qrcode.vue";
 export default {
   name: "QrPaper",
-  props: ["ur", "dir", "td"],
+  props: ["ur", "dir", "ta"],
   data() {
     return {
       servicewindow: null,
-      mywindow: null
+      mywindow: null,
     };
   },
   components: {
     ProviderContact,
-    QrcodeVue
+    QrcodeVue,
   },
   computed: {
     qrpath() {
@@ -99,20 +92,21 @@ export default {
     },
     totalwindows() {
       var tw = [];
+      var label = this.$t("select.windownumber");
       for (var i = 1; i < 21; i++) {
-        tw.push(i);
+        tw.push({ label: label + i, value: i });
       }
       return tw;
-    }
+    },
   },
   methods: {
     printwindow() {
       window.print();
-    }
+    },
   },
   beforeCreate() {},
   created() {},
-  mounted() {}
+  mounted() {},
 };
 </script>
 

@@ -2,15 +2,15 @@
   <div>
     <b-container class="container" :dir="dir">
       <b-overlay :show="loading" rounded="sm">
-        <b-form v-if="show">
-          <h3>تسجيل الدخول</h3>
+        <b-form v-if="show" @submit="signIN">
+          <h3>{{ $t("nav.signin") }}</h3>
 
           <b-row align-h="center">
             <b-col sm="6">
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1"
-                label="البريد الالكتروني:"
+                :label="$t('labels.email')"
                 label-for="input-1"
                 class="input-title"
               >
@@ -20,7 +20,7 @@
                   type="text"
                   required
                   dir="ltr"
-                  placeholder="البريد الإلكتروني لتسجيل الدخول"
+                  :placeholder="$t('text.email_sign_in')"
                 ></b-form-input>
               </b-form-group>
             </b-col>
@@ -30,7 +30,7 @@
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-2"
-                label="كلمة المرور:"
+                :label="$t('labels.password')"
                 label-for="input-2"
                 class="input-title"
               >
@@ -39,7 +39,7 @@
                   v-model="password"
                   type="password"
                   required
-                  placeholder="كلمة المرور"
+                  :placeholder="$t('text.password')"
                   dir="ltr"
                   @keyup.native.enter="signIN"
                 ></b-form-input>
@@ -57,30 +57,31 @@
           </b-alert>
           <div>
             <b-button
-              @click="signIN"
+              type="submit"
               :disabled="loginbuttondisabled"
               variant="primary"
-              >تسجيل الدخول
+            >
+              {{ $t("nav.signin") }}
             </b-button>
             <b-button @click="forgotpasswordmodal = true" variant="warning">
-              نسيت كلمة المرور
+              {{ $t("text.forgotpassword") }}
             </b-button>
             <b-button to="/Signup" variant="success">
-              فرع جديد
+              {{ $t("nav.newbranch") }}
             </b-button>
           </div>
           <b-modal
             v-model="forgotpasswordmodal"
             id="modal-forgot-password"
-            title="نسيت كلمة المرور"
-            ok-title="موافق"
-            cancel-title="الغاء الأمر"
+            :title="$t('text.forgotpassword')"
+            :ok-title="$t('buttons.ok')"
+            :cancel-title="$t('buttons.cancle')"
             @ok="resetpassword"
           >
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-1"
-              label="البريد الالكتروني:"
+              :label="$t('labels.email')"
               label-for="input-1"
               class="input-title"
             >
@@ -90,7 +91,7 @@
                 type="text"
                 required
                 dir="ltr"
-                placeholder="البريد الإلكتروني لتسجيل الدخول"
+                :placeholder="$t('text.email_sign_in')"
               ></b-form-input>
             </b-form-group>
           </b-modal>
@@ -116,7 +117,7 @@ export default {
       loginbuttondisabled: false,
       forgotpasswordmodal: false,
       show: true,
-      loading: false
+      loading: false,
     };
   },
   props: ["dir", "ta", "ur"],
@@ -129,21 +130,22 @@ export default {
           this.error = "تم ارسال بريد الكتروني لتدوين كلمة مرور جديدة";
           this.showAlert();
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
     },
-    signIN() {
+    signIN(evt) {
+      evt.preventDefault();
       this.loading = true;
       firebase
         .auth()
         .signInWithEmailAndPassword(this.email, this.password)
-        .then(loggedin => {
+        .then((loggedin) => {
           //Update Last Login Time
           db.collection("users")
             .doc(loggedin.user.uid)
             .update({
-              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             });
           this.loginbuttondisabled = true;
           var redirect = this.$route.query.redirect;
@@ -153,7 +155,7 @@ export default {
             window.location.href = "/";
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.loading = false;
           this.loginbuttondisabled = false;
           if (
@@ -180,9 +182,9 @@ export default {
     },
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
-    }
+    },
   },
-  created() {}
+  created() {},
 };
 </script>
 <style scoped>
@@ -212,5 +214,21 @@ p {
 p a {
   text-decoration: underline;
   cursor: pointer;
+}
+.input-title {
+  font-size: 1.1rem;
+}
+.form-control {
+  height: 2.5em;
+  min-height: 2.5em;
+  font-size: 1.1rem;
+  margin: 10px 0;
+  padding: 15px;
+  text-align: center;
+}
+@media only screen and (max-width: 400px) {
+  .form-control {
+    font-size: 0.8em;
+  }
 }
 </style>

@@ -1,16 +1,36 @@
 <template>
   <div id="app">
-    <Header v-if="loadcompleted" :ur="CurrentUserRoles" @logout="clearroles" />
+    <Header
+      v-if="loaded"
+      :ur="CurrentUserRoles"
+      :mynumber="clientdata.clientnumber"
+      :lang="lang"
+      @setLanguage="setLanguage"
+      @logout="clearroles"
+    />
+    <!-- <br /><br /><br />
+
+    {{ 3600000 | duration("humanize") }}
+    <p>{{ $t("message.hello", { msg: "hello" }) }}</p> -->
+
     <router-view
       class="rv"
-      v-if="loadcompleted"
+      v-if="loaded"
       :dir="direction"
+      :lang="lang"
       :ta="textalign"
       :ur="CurrentUserRoles"
       :providers="providers"
+      :mynumberprop="clientdata.clientnumber"
+      :myproviderprop="clientdata.clientprovider"
+      :myserviceprop="clientdata.clientservice"
+      :clientname="clientdata.clientname"
+      :clientphone="clientdata.clientphone"
       @getdistance="getproviders"
+      @updateclient="updateclient"
     />
-    <splash-screen v-if="!loadcompleted" />
+
+    <splash-screen v-if="!loaded" />
 
     <div id="recaptcha"></div>
   </div>
@@ -24,6 +44,8 @@ import SplashScreen from "./components/SplashScreen.vue";
 
 import getDistance from "geolib/es/getDistance";
 
+import moment from "moment";
+
 import firebase from "./firebaseConfig.js";
 const db = firebase.firestore();
 
@@ -31,27 +53,106 @@ export default {
   name: "app",
   components: {
     Header,
-    SplashScreen
+    SplashScreen,
   },
   data() {
     return {
-      // authUser: "",
       CurrentUserRoles: {},
       providers: {},
       loadcompleted: false,
+      showtime: null,
+      lang: "ar-ly",
       direction: "rtl",
       textalign: "right",
-      loggedin: ""
+      clientdata: {
+        clientname: null,
+        clientphone: null,
+        clientnumber: null,
+        clientprovider: null,
+        clientservice: null,
+      },
     };
   },
+  computed: {
+    loaded() {
+      if (this.loadcompleted || Object.keys(this.CurrentUserRoles).length !== 0)
+        return true;
+      else return false;
+    },
+  },
   methods: {
+    updateclient(
+      clientname,
+      clientphone,
+      clientnumber,
+      clientprovider,
+      clientservice
+    ) {
+      //clientname
+      if (this.$session.exists("clientname")) {
+        this.clientdata.clientname = this.$session.get("clientname");
+      } else if (clientname) {
+        this.clientdata.clientname = clientname;
+      } else {
+        this.clientdata.clientname = null;
+      }
+
+      //clientphone
+      if (this.$session.exists("clientphone")) {
+        this.clientdata.clientphone = this.$session.get("clientphone");
+      } else if (clientphone) {
+        this.clientdata.clientphone = clientphone;
+      } else {
+        this.clientdata.clientphone = null;
+      }
+
+      //clientnumber
+      if (this.$session.exists("clientnumber")) {
+        this.clientdata.clientnumber = this.$session.get("clientnumber");
+      } else if (clientnumber) {
+        this.clientdata.clientnumber = clientnumber;
+      } else {
+        this.clientdata.clientnumber = null;
+      }
+
+      //clientprovider;
+      if (this.$session.exists("clientprovider")) {
+        this.clientdata.clientprovider = this.$session.get("clientprovider");
+      } else if (clientprovider) {
+        this.clientdata.clientprovider = clientprovider;
+      } else {
+        this.clientdata.clientprovider = null;
+      }
+
+      //clientservice
+      this.clientdata.clientservice = clientservice;
+      if (this.$session.exists("clientservice")) {
+        this.clientdata.clientservice = this.$session.get("clientservice");
+      } else if (clientservice) {
+        this.clientdata.clientservice = clientservice;
+      } else {
+        this.clientdata.clientservice = null;
+      }
+    },
+    timenow() {
+      this.showtime = moment().format("YYYY-MM-DD  - hh:mm:ss a");
+    },
     clearroles() {
       this.CurrentUserRoles = {};
-      this.loggedin(); //Important
+      // this.loggedin(); //Important
       this.logout();
     },
     logout() {
       console.log("logout");
+      this.$session.remove("clientname");
+      this.$session.remove("clientphone");
+      this.$session.remove("clientnumber");
+      this.$session.remove("clientprovider");
+      this.$session.remove("clientservice");
+      this.clientdata.clientnumber = null;
+      this.clientdata.clientprovider = null;
+      this.clientdata.clientservice = null;
+
       //TEMPORARY HERE
       firebase
         .auth()
@@ -65,10 +166,10 @@ export default {
     getproviders(mylocation) {
       db.collection("users")
         .orderBy("servicetype")
-        .onSnapshot(querySnapshot => {
+        .onSnapshot((querySnapshot) => {
           this.providers = {};
 
-          querySnapshot.forEach(doc => {
+          querySnapshot.forEach((doc) => {
             this.providers[doc.id] = doc.data();
             this.providers[doc.id].id = doc.id;
             if (mylocation != null) {
@@ -77,7 +178,7 @@ export default {
                   { latitude: mylocation.Pc, longitude: mylocation.Vc },
                   {
                     latitude: doc.data().coordinates.Pc,
-                    longitude: doc.data().coordinates.Vc
+                    longitude: doc.data().coordinates.Vc,
                   }
                 );
               } else {
@@ -85,68 +186,65 @@ export default {
               }
             }
           });
-          this.loadcompleted = true;
         });
-    }
+    },
+    setLanguage(lang) {
+      this.lang = lang;
+      this.$i18n.locale = lang;
+      this.$moment.locale(lang);
+      if (lang == "ar" || lang == "ar-ly") {
+        this.direction = "rtl";
+        this.textalign = "right";
+      } else {
+        this.direction = "ltr";
+        this.textalign = "left";
+      }
+      this.$session.set("lang", lang);
+      //console.log("set sesstion to ", lang);
+    },
   },
   beforeCreate() {},
   created() {
+    //Set Language based on last session
+    if (
+      this.$session.exists("lang") &&
+      this.$session.get("lang") != this.lang
+    ) {
+      this.setLanguage(this.$session.get("lang"));
+    }
+
+    //Get session data
+    this.updateclient();
+
+    //Update timer
+    setInterval(() => this.timenow(), 1 * 1000);
+
+    //Manual logout
     if (this.$route.path == "/logout") {
       this.logout();
     }
-    /*
-For testing only
-    db.collection("users")
-      .doc("H0ddTQZWpuTArmpZDv74sguZyi63")
-      .get()
-      .then((doc) => {
-        console.log("onSnapshot", doc.data());
-      });
-*/
-    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-    //   "recaptcha",
-    //   {
-    //     callback: (response) => {
-    //       // reCAPTCHA solved, allow signInWithPhoneNumber.
-    //       console.log("reCAPTCHA-solved", response);
-    //     },
-    //     "expired-callback": () => {
-    //       // Response expired. Ask user to solve reCAPTCHA again.
-    //       console.log("reCAPTCHA-expired");
-    //     },
-    //   }
-    // );
-    // window.recaptchaVerifier.render();
 
+    //Get all the provicers on launch
     this.getproviders();
 
-    firebase.auth().onAuthStateChanged(user => {
+    //Check Login Status
+    firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         //console.log("Logged in user ", user.uid);
-
-        this.loggedin = db
-          .collection("users")
+        db.collection("users")
           .doc(user.uid)
           .onSnapshot(
-            doc => {
+            (doc) => {
               this.CurrentUserRoles = doc.data();
               this.CurrentUserRoles.uid = user.uid;
-              this.loadcompleted = true;
+              //this.loadcompleted = true;
             },
             function(error) {
               console.log(error);
             }
           );
-
-        //this.CurrentUserRoles.uid = user.uid;
-        //this.loadcompleted = true;
       } else {
-        //console.log("else");
-        // if (this.$route.path != "/Login") {
-        //   var referrer = this.$router.history.current.fullPath;
-        //   this.$router.push({ name: "Login", query: { redirect: referrer } });
-        // }
-
+        //For Public
         this.loadcompleted = true;
       }
     });
@@ -232,21 +330,46 @@ For testing only
         "expired-callback": function() {
           // Response expired. Ask user to solve reCAPTCHA again.
           console.log("reCAPTCHA-expired");
-        }
+        },
       }
     );
     window.recaptchaVerifier.render().then(function(widgetId) {
       window.recaptchaWidgetId = widgetId;
     });
-  }
+  },
 };
 </script>
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Baloo+2:wght@400;500;600;700&display=swap");
+@font-face {
+  font-family: "Cairo";
+  src: url("./assets/fonts/Cairo/Cairo-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Cairo";
+  src: url("./assets/fonts/Cairo/Cairo-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: bold;
+}
+/*
+@font-face {
+  font-family: "Baloo 2";
+  src: url("./assets/fonts/Baloo_2/Baloo2-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Baloo 2";
+  src: url("./assets/fonts/Baloo_2/Baloo2-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: bold;
+}
+*/
 #app {
   /* font-family: Avenir, Helvetica, Arial, sans-serif; */
   /* font-family: Almarai, Avenir, Helvetica, Arial, sans-serif; */
-  font-family: "Almarai", "Baloo 2", "sans-serif";
+  font-family: "Cairo", "Helvetica Neue", "Helvetica", "sans-serif", "Arial";
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -272,6 +395,9 @@ For testing only
 .rv {
   padding-top: 60px;
   padding-bottom: 60px;
+}
+.bold {
+  font-weight: bold;
 }
 
 @media print {

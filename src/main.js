@@ -13,10 +13,22 @@ Vue.use(IconsPlugin);
 // import 'pc-bootstrap4-datetimepicker/build/css/bootstrap-datetimepicker.css';
 // Vue.use(datePicker);
 
-// Vue.use(require('vue-moment'));
+// import moment from "moment-timezone";
+// moment.tz.setDefault("Africa/Tripoli");
+// require("moment/locale/es");
 
-import moment from "moment-timezone";
-moment.tz.setDefault("Africa/Tripoli");
+// Vue.use(require("vue-moment"), moment);
+
+//import VueMoment from 'vue-moment'
+import momentzone from "moment-timezone";
+momentzone.tz.setDefault("Africa/Tripoli");
+
+const moment = require("moment");
+require("moment/locale/ar-ly");
+
+Vue.use(require("vue-moment"), {
+  moment,
+});
 
 import vSelect from "vue-select";
 Vue.component("v-select", vSelect);
@@ -27,6 +39,9 @@ Vue.use(VuePwaInstallPlugin);
 
 import VueQrcodeReader from "vue-qrcode-reader";
 Vue.use(VueQrcodeReader);
+
+import VueSessionStorage from "vue-sessionstorage";
+Vue.use(VueSessionStorage);
 
 import * as VueGoogleMaps from "vue2-google-maps";
 import { gmapApi } from "./api.js";
@@ -57,9 +72,22 @@ Vue.use(VueGoogleMaps, {
 import { GmapMarker } from "vue2-google-maps/src/components/marker";
 Vue.component("GmapMarker", GmapMarker);
 
+import VueI18n from "vue-i18n";
+Vue.use(VueI18n);
+
+import { messages } from "./language.js";
+
+// Create VueI18n instance with options
+const i18n = new VueI18n({
+  locale: "ar-ly", // set locale
+  fallbackLocale: "ar-ly",
+  messages, // set locale messages
+});
+
 Vue.config.productionTip = false;
 
 new Vue({
   router,
   render: (h) => h(App),
+  i18n,
 }).$mount("#app");

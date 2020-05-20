@@ -7,7 +7,9 @@
             Object.keys(this.provider.currentnumber).length > 0
         "
       >
-        <b-alert show variant="dark">الارقام الكلية في الطابور</b-alert>
+        <b-alert show variant="dark" class="bold">
+          {{ $t("alerts.totalnumbers") }}
+        </b-alert>
         <b-row v-if="servicewindow == null" fluid>
           <b-col
             v-for="(cn, label) in provider.currentnumber"
@@ -16,12 +18,13 @@
             :md="md"
           >
             <b-card :header="label" class="mb-2">
-              <b-card-text> {{ cn }}</b-card-text>
+              <b-card-text class="bold"> {{ cn }}</b-card-text>
             </b-card>
           </b-col>
         </b-row>
+        <!-- For Single Card Use Below -->
         <b-card v-else :header="servicewindow" class="mb-2">
-          <b-card-text>
+          <b-card-text class="bold">
             {{ provider.currentnumber[servicewindow] }}
           </b-card-text>
         </b-card>
@@ -34,12 +37,9 @@
 <script>
 export default {
   name: "TotalNumbers",
-  props: ["ur", "servicewindow", "dir", "td"],
+  props: ["ur", "servicewindow", "dir", "ta"],
   data() {
-    return {
-      //provider: {},
-      //servicewindow: null,
-    };
+    return {};
   },
   computed: {
     md() {
@@ -55,29 +55,12 @@ export default {
   },
   methods: {},
   beforeCreate() {},
-  created() {
-    // this.providerkey = this.$route.query.key;
-    // db.collection("users")
-    //   .doc(this.providerkey)
-    //   .onSnapshot((doc) => {
-    //this.provider = this.ur;
-    /*
-    if (
-      this.provider.windowtype == null ||
-      this.provider.windowtype.length < 2
-    ) {
-      this.servicewindow = "اجمالي عدد الطابور";
-    }
-    */
-    //   });
-  },
+  created() {},
   mounted() {},
 };
 </script>
 
 <style scoped>
 .container {
-  margin-top: 40px;
-  margin-bottom: 40px;
 }
 </style>

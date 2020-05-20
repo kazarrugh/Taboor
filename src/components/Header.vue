@@ -15,58 +15,43 @@
         <!-- Right aligned nav items -->
         <b-navbar-nav class="ml-auto">
           <!-- <b-nav-item v-if="!ur.displayName" href="#">المستخدم</b-nav-item> -->
+          <b-nav-item v-if="loggedin && !disablerouter" to="/display">
+            {{ $t("nav.display") }}
+          </b-nav-item>
 
-          <b-nav-item v-if="loggedin" to="/profile">{{
-            ur.displayName
-          }}</b-nav-item>
-          <b-nav-item v-if="!loggedin" to="/Signup">فرع جديد</b-nav-item>
-          <!--
-          <b-nav-item v-if="loggedin" @click="logout()"
-            >تسجيل الخروج</b-nav-item
-          >
+          <b-nav-item v-if="loggedin && !disablerouter" to="/profile">
+            {{ ur.displayName }}
+          </b-nav-item>
+          <b-nav-item v-if="!loggedin && !disablerouter" to="/Signup">
+            {{ $t("nav.newbranch") }}
+          </b-nav-item>
 
-          <b-nav-item v-if="!loggedin" to="/Login">تسجيل الدخول</b-nav-item>
-          
-          
-          <b-nav-item-dropdown right menu-class="w-100">
-            <template v-slot:button-content>
-              <em v-if="!ur.displayName">المستخدم</em>
-              <em v-else>{{ ur.displayName }}</em>
-            </template>
-            <b-dropdown-item v-if="!loggedin" to="/Login"
-              >تسجيل الدخول</b-dropdown-item
-            >
-            <br v-if="!loggedin" />
-            <b-dropdown-item v-if="!loggedin" to="/Signup"
-              >فرع جديد</b-dropdown-item
-            >
-            <br v-if="!loggedin" />
-            <b-dropdown-item v-if="loggedin" to="/profile"
-              >الملف التعريفي</b-dropdown-item
-            >
-            <br v-if="loggedin" />
-
-            <b-dropdown-item v-if="loggedin" @click="logout()"
-              >تسجيل الخروج</b-dropdown-item
-            >
-          </b-nav-item-dropdown>
--->
+          <b-nav-item v-if="lang == 'ar-ly'" @click="setLanguage('en')">
+            English
+          </b-nav-item>
+          <b-nav-item v-if="lang == 'en'" @click="setLanguage('ar-ly')">
+            عربي
+          </b-nav-item>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
 
-    <b-navbar fixed="bottom" type="dark" variant="dark">
+    <b-navbar fixed="bottom" type="dark" variant="dark" v-show="!disablerouter">
       <!-- style="padding-bottom:10px;padding-left:30px;padding-top:10px;padding-right:0px;" -->
 
       <b-row style="width:100%;margin:0px;">
         <b-col cols="4">
           <router-link v-if="!loggedin" to="/">
             <b-icon icon="house-door" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">الرئيسية</div>
+            <div class="icontitle">
+              {{ $t("nav.home") }}
+            </div>
           </router-link>
           <router-link v-if="loggedin" to="/serve">
             <b-icon icon="play" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">خدمة</div>
+            <div class="icontitle">
+              {{ $t("nav.serve") }}
+            </div>
           </router-link>
         </b-col>
         <b-col cols="4">
@@ -76,7 +61,9 @@
               variant="light"
               font-scale="1.5"
             ></b-icon>
-            <div class="icontitle">QR Scan</div>
+            <div class="icontitle">
+              {{ $t("nav.qrscan") }}
+            </div>
           </router-link>
           <router-link v-if="loggedin" to="/QrPaper">
             <b-icon
@@ -84,53 +71,55 @@
               variant="light"
               font-scale="1.5"
             ></b-icon>
-            <div class="icontitle">QR Paper</div>
+            <div class="icontitle">
+              {{ $t("nav.qrpaper") }}
+            </div>
           </router-link>
         </b-col>
         <b-col cols="4">
           <router-link v-if="!loggedin" to="/login">
             <b-icon icon="lock" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">تسجيل الدخول</div>
+            <div class="icontitle">
+              {{ $t("nav.signin") }}
+            </div>
           </router-link>
 
           <div v-if="loggedin" @click="logout()" style="cursor:pointer;">
             <b-icon icon="lock-fill" variant="light" font-scale="1.5"></b-icon>
-            <div class="icontitle">تسجيل الخروج</div>
+            <div class="icontitle">
+              {{ $t("nav.signout") }}
+            </div>
           </div>
         </b-col>
       </b-row>
-      <!-- </b-container> -->
-      <!-- <div class="mx-auto bg-info" style="width: 200px;">
-        Centered element
-      </div> -->
-
-      <!-- <b-nav-item href="#">Link 2</b-nav-item> -->
-      <!-- </b-navbar-nav> -->
     </b-navbar>
   </div>
 </template>
 
 <script>
-// const firebase = require("firebase/app");
-// require("firebase/auth");
-
 export default {
-  props: ["ur"],
+  props: ["ur", "mynumber", "lang"],
   data() {
-    return {
-      // user: null,
-    };
+    return {};
   },
   computed: {
     loggedin() {
       return Object.keys(this.ur).length !== 0;
     },
+    disablerouter() {
+      if (this.mynumber != null) return true;
+      else return false;
+    },
   },
   created() {},
   methods: {
     logout() {
-      this.$emit("logout");
-      //this.$router.push({ name: "Login", query: {} });
+      if (!this.disablerouter) {
+        this.$emit("logout");
+      }
+    },
+    setLanguage(lang) {
+      this.$emit("setLanguage", lang);
     },
   },
 };
