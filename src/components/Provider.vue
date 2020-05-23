@@ -22,8 +22,9 @@
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
           :options="this.provider.windowtype"
-          placeholder="نوع الخدمة المطلوبة"
+          :placeholder="$t('select.typeofserviceneeded')"
           v-model="servicewindow"
+          v-on:input="changeservicewindow"
           style="margin-bottom:30px;"
           :dir="dir"
         >
@@ -39,7 +40,7 @@
 
         <b-button
           block
-          :disabled="!servicewindow"
+          :disabled="getnumberdisabled"
           variant="outline-primary"
           type="submit"
           size="lg"
@@ -50,14 +51,59 @@
 
       <!-- End Get Number-->
       <!-- Start Show my numebr -->
+      <b-alert show v-if="mynumber != null" variant="dark" class="bold">
+        {{ $t("alerts.mynumberinline") }}
+      </b-alert>
       <b-card
         v-if="mynumber != null"
-        header="رقمي في الطابور"
+        :header="servicewindow"
         class="mb-2 bigtxt"
       >
-        <b-card-text> {{ mynumber }}</b-card-text>
+        <b-card-text>
+          <!-- <div class="mynumberinline">
+            {{ $t("alerts.mynumberinline") }}
+          </div> -->
+          {{ mynumber }}</b-card-text
+        >
+        <template v-slot:footer v-if="servicedate">
+          {{ servicedate }}
+        </template>
       </b-card>
       <!-- End Show my numebr -->
+      <b-alert
+        variant="danger"
+        :show="dismissCountDown"
+        @dismissed="dismissCountDown = 0"
+        @dismiss-count-down="countDownChanged"
+      >
+        {{ error }}
+      </b-alert>
+      <!-- Start Cancel Request -->
+
+      <b-button
+        block
+        v-if="mynumber != null && docid != null"
+        variant="outline-danger"
+        size="lg"
+        @click="confirmcancelmodal = true"
+      >
+        {{ $t("buttons.cancelnumber") }}
+      </b-button>
+
+      <b-modal
+        v-model="confirmcancelmodal"
+        :title="$t('buttons.cancelnumber')"
+        :ok-title="$t('buttons.ok')"
+        :cancel-title="$t('buttons.cancel')"
+        @ok="cancelnumber"
+        :dir="dir"
+      >
+        <h3 style="text-align: center;">
+          {{ $t("alerts.areyousure") }}
+        </h3>
+      </b-modal>
+
+      <!-- Start Cancel Request -->
 
       <!-- Start Review -->
       <Review
@@ -75,18 +121,24 @@
 
         <Display
           :ur="provider"
+          :pk="providerkey"
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :showtime="showtime"
+          :showdate="showdate"
         />
         <!-- end currently served numbers -->
 
         <!-- current total numbers -->
         <TotalNumbers
           :ur="provider"
+          :pk="providerkey"
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :showtime="showtime"
+          :showdate="showdate"
         />
         <!-- end current total numbers -->
         <!-- Start customer reviews -->
@@ -113,10 +165,15 @@
         <b-jumbotron
           fluid
           container-fluid
-          :header="'شباك رقم ' + mywindow"
-          :lead="'رقمي في الطابور ' + mynumber"
+          :header="$t('select.windownumber') + mywindow"
           style="width:100%;"
         >
+          <template v-slot:lead>
+            <br />
+            {{ $t("alerts.mynumberinline") + " " + mynumber }}
+            <br /><br />
+            {{ servicedate }}
+          </template>
         </b-jumbotron>
         <br />
       </div>
@@ -135,15 +192,37 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "Provider",
-  props: ["ur", "dir", "ta", "mynumberprop", "myproviderprop", "myserviceprop"],
+  props: [
+    "ur",
+    "dir",
+    "ta",
+    "showtime",
+    "showdate",
+    "mynumberprop",
+    "myproviderprop",
+    "myserviceprop",
+    "myservicedateprop",
+    "clientname",
+    "clientphone",
+    "mydocidprop",
+  ],
   data() {
     return {
-      providerkey: "",
+      providerkey: null,
       provider: {},
+      currentlyserving: {},
       servicewindow: null,
+      getnumberdisabled: false,
+      confirmcancelmodal: false,
       mynumber: null,
+      servicedate: null,
       mylocation: null,
+      docid: null,
       served: false,
+      error: "",
+      dismissSecs: 5,
+      dismissCountDown: 0,
+      tomorrowalert: false,
     };
   },
   components: {
@@ -154,24 +233,39 @@ export default {
     Reviews,
   },
   computed: {
+    ////////////////////////NEEEDS WORK//////////////////
     mywindow() {
       if (
         this.mynumber == null ||
-        this.provider.currentlyserving == null ||
-        this.servicewindow == null
+        this.currentlyserving == null ||
+        this.currentlyserving[this.servicewindow] == null ||
+        this.currentlyserving[this.servicewindow].inservice == null
       ) {
         return null;
-      }
-      var value = this.mynumber;
-      var obj = this.provider.currentlyserving[this.servicewindow];
-
-      if (Object.values(obj).includes(value)) {
-        this.itsmyturn();
-
-        return Object.keys(obj).find((key) => obj[key] === value);
       } else {
-        return null;
+        var obj = this.currentlyserving[this.servicewindow].inservice;
+        if (Object.values(obj).includes(this.mynumber)) {
+          this.itsmyturn();
+          return Object.keys(obj).find((key) => obj[key] === this.mynumber);
+        } else {
+          return null;
+        }
       }
+      // var value = this.mynumber;
+      // if (this.servicewindow != null) {
+      //   var obj = this.provider.currentlyserving[this.servicewindow];
+      // } else {
+      //   obj = this.provider.currentlyserving;
+      // }
+
+      // if (Object.values(obj).includes(value)) {
+      //   this.itsmyturn();
+
+      //   return Object.keys(obj).find((key) => obj[key] === value);
+      // } else {
+      //   return null;
+      // }
+      //return null;
     },
     afterserved() {
       if (this.served && this.mywindow == null) {
@@ -181,13 +275,41 @@ export default {
     },
   },
   methods: {
+    getcurrentlyserving() {
+      console.log(
+        "currentlyserving pk ",
+        this.providerkey,
+        "date: ",
+        this.showdate
+      );
+      db.collection("currentlyserving")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.showdate)
+        .onSnapshot((snapshot) => {
+          this.currentlyserving = {};
+          snapshot.forEach((doc) => {
+            this.currentlyserving[doc.data().servicewindow] = doc.data();
+            this.currentlyserving[doc.data().servicewindow].id = doc.id;
+          });
+        });
+    },
+    changeservicewindow() {
+      if (this.servicewindow != null) {
+        this.getnumberdisabled = false;
+      } else {
+        this.getnumberdisabled = true;
+      }
+    },
     aftermyturn() {
       //Delete My number
       this.mynumber = null;
+      this.servicedate = null;
       //Clear cookies
       this.$session.remove("clientnumber");
       this.$session.remove("clientprovider");
       this.$session.remove("clientservice");
+      this.$session.remove("servicedate");
+      this.$session.remove("docid");
     },
     itsmyturn() {
       if (!this.served) {
@@ -203,6 +325,7 @@ export default {
       this.served = true;
     },
     reviewadded(customername, customerphone) {
+      console.log("review added and deleting number");
       this.mynumber = null;
       this.served = false;
       this.$session.set("clientname", customername);
@@ -210,6 +333,8 @@ export default {
       this.$session.remove("clientnumber");
       this.$session.remove("clientprovider");
       this.$session.remove("clientservice");
+      this.$session.remove("servicedate");
+      this.$session.remove("docid");
 
       this.$emit(
         "updateclient",
@@ -217,47 +342,203 @@ export default {
         customerphone, //clientphone
         null, //clientnumber
         null, //clientprovider
-        null //clientservice
+        null, //clientservice
+        null, //servicedate
+        null //docid
       );
 
       this.$router.push({ name: "Dashboard", query: {} });
     },
+    cancelnumber() {
+      db.collection("currentnumber")
+        .doc(this.docid)
+        .update({
+          canceled: firebase.firestore.FieldValue.arrayUnion(this.mynumber),
+        })
+        .then(() => {
+          this.reviewadded(this.clientname, this.clientphone);
+        });
+    },
+    addclientcontact() {
+      if (
+        (this.clientname || this.clientphone) &&
+        this.docid &&
+        this.mynumber
+      ) {
+        console.log("update client contact to doc id", this.docid);
+        db.collection("currentnumber")
+          .doc(this.docid)
+          .set(
+            {
+              // provider: this.providerkey,
+              // servicedate: this.servicedate,
+              // servicewindow: this.servicewindow,
+              // [this.mynumber]: {
+              //   clientname: this.clientname,
+              //   clientphone: this.clientphone,
+              // },
+              clientnames: { [this.mynumber]: this.clientname },
+              clientphones: { [this.mynumber]: this.clientphone },
+            },
+            { merge: true }
+          );
+      } else {
+        console.log(
+          "Couldn't add client contact because name:",
+          this.clientname,
+          ", phone:",
+          this.clientphone,
+          ", docid:",
+          this.docid,
+          ", my number:",
+          this.mynumber
+        );
+      }
+    },
+    addnewnumber() {
+      console.log("adding to Firesetore number", this.mynumber);
+      db.collection("currentnumber")
+        .add({
+          provider: this.providerkey,
+          servicedate: this.servicedate,
+          servicewindow: this.servicewindow,
+          number: this.mynumber,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        })
+        .then((doc) => {
+          this.docid = doc.id;
+          this.getnumberfollowup();
+        });
+    },
+
     getnumber(evt) {
       evt.preventDefault();
 
-      if (this.provider.currentnumber == null) {
-        this.provider.currentnumber = {};
+      //Disable Get Number button
+      this.getnumberdisabled = true;
+
+      //If time now is before the closing time
+      var today = this.$moment().format("YYYY-MM-DD");
+
+      if (this.provider.closetime) {
+        console.log("provider close time is ", this.provider.closetime);
+        //X = Unix timestamp in seconds
+        //x = Unix timestamp in milliseconds
+        var nowinseconds =
+          this.$moment().format("X") -
+          this.$moment(this.$moment().format("YYYY-MM-DD")).format("X");
+
+        var a = this.provider.closetime.split(":"); // split it at the colons
+
+        // minutes are worth 60 seconds. Hours are worth 60 minutes.
+        var closetimeinseconds = +a[0] * 60 * 60 + +a[1] * 60 + +a[2];
+
+        console.log("close time in seconds ", closetimeinseconds);
+        console.log("time now in seconds ", nowinseconds);
+
+        //If time now is after the closing time
+        if (nowinseconds > closetimeinseconds) {
+          console.log("The date will be tomorrow because provider is closed");
+          today = this.$moment()
+            .add(1, "d")
+            .format("YYYY-MM-DD");
+          //Show alert
+          this.tomorrowalert = true;
+        } else {
+          this.tomorrowalert = false;
+        }
       }
+      this.servicedate = today;
 
-      if (this.provider.currentnumber[this.servicewindow] != null) {
-        this.mynumber = this.provider.currentnumber[this.servicewindow] + 1;
-      } else {
-        this.mynumber = 1;
-      }
-      console.log("my number is", this.mynumber);
+      db.collection("currentnumber")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.servicedate)
+        .where("servicewindow", "==", this.servicewindow)
+        .get({ source: "server" })
+        .then((querySnapshot) => {
+          console.log("querySnapshot.size is ", querySnapshot.size);
+          if (querySnapshot.size == 0) {
+            //In case this is a new date
+            this.mynumber = 1;
+            this.addnewnumber();
+          } else {
+            querySnapshot.forEach((doc) => {
+              if (doc.data().number) {
+                this.docid = doc.id;
 
-      //Update local data object
-      this.provider.currentnumber[this.servicewindow] = this.mynumber;
+                //Start Transaction
+                // Create a reference to the SF doc.
+                var cnDocRef = db.collection("currentnumber").doc(this.docid);
 
-      //Update remote data object
-      db.collection("users")
-        .doc(this.providerkey)
-        .update({
-          currentnumber: this.provider.currentnumber,
+                // Uncomment to initialize the doc.
+                // cnDocRef.set({ population: 0 });
+
+                return db
+                  .runTransaction((transaction) => {
+                    // This code may get re-run multiple times if there are conflicts.
+                    return transaction.get(cnDocRef).then((cnDoc) => {
+                      if (!cnDoc.exists) {
+                        throw "Document does not exist!";
+                      }
+
+                      // Add one person to the city population.
+                      // Note: this could be done without a transaction
+                      //       by updating the population using FieldValue.increment()
+                      this.mynumber = cnDoc.data().number + 1;
+                      transaction.update(cnDocRef, {
+                        number: this.mynumber,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      });
+                    });
+                  })
+                  .then(() => {
+                    console.log("Transaction successfully committed!");
+                    this.getnumberfollowup();
+                  })
+                  .catch((error) => {
+                    console.log("Transaction failed: ", error);
+                  });
+              } else {
+                console.log(doc.id, " doc id Doesnt contain a number");
+                this.mynumber = 1;
+                this.addnewnumber();
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = this.$t("alerts.offline");
+          this.showAlert();
+          //Enable Get Number button
+          this.getnumberdisabled = false;
         });
-      console.log("updated firebase with my number", this.mynumber);
+    },
+    getnumberfollowup() {
+      if (this.tomorrowalert) {
+        this.error = this.$t("alerts.closedtomorrow");
+        this.showAlert();
+      }
 
       this.$emit(
         "updateclient",
-        null,
-        null,
+        this.clientname,
+        this.clientphone,
         this.mynumber,
         this.providerkey,
-        this.servicewindow
+        this.servicewindow,
+        this.servicedate,
+        this.docid
       );
       this.$session.set("clientnumber", this.mynumber);
       this.$session.set("clientprovider", this.providerkey);
       this.$session.set("clientservice", this.servicewindow);
+      this.$session.set("servicedate", this.servicedate);
+      this.$session.set("docid", this.docid);
+
+      //Add client contact
+      this.addclientcontact();
 
       //Get Location
       this.geolocate();
@@ -269,35 +550,30 @@ export default {
             position.coords.latitude,
             position.coords.longitude
           );
-          console.log("got location", this.mylocation);
-
-          if (this.provider.clientlocations == null) {
-            this.provider.clientlocations = {};
+          if (this.mylocation && this.docid) {
+            db.collection("currentnumber")
+              .doc(this.docid)
+              .set(
+                {
+                  //provider: this.providerkey,
+                  //ervicedate: this.servicedate,
+                  //servicewindow: this.servicewindow,
+                  clientlocations: { [this.mynumber]: this.mylocation },
+                },
+                { merge: true }
+              );
+            console.log("wrote location to firebase doc id", this.docid);
           }
-          if (this.provider.clientlocations[this.servicewindow] == null) {
-            this.provider.clientlocations[this.servicewindow] = {};
-          }
-          this.provider.clientlocations[this.servicewindow][
-            this.mynumber
-          ] = this.mylocation;
-
-          console.log("wrote location locally", this.mylocation);
-
-          if (this.mylocation) {
-            //Update remote data object
-            db.collection("users")
-              .doc(this.providerkey)
-              .update({
-                clientlocations: this.provider.clientlocations,
-              });
-          }
-          console.log("wrote location to firebase", this.mylocation);
-
-          //this.$emit("getdistance", this.mylocation);
         });
       } else {
         console.log("Geolocation is not supported by this browser.");
       }
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert() {
+      this.dismissCountDown = this.dismissSecs;
     },
   },
   beforeCreate() {},
@@ -311,19 +587,44 @@ export default {
       .doc(this.providerkey)
       .onSnapshot((doc) => {
         this.provider = doc.data();
-        if (
-          this.provider.windowtype == null ||
-          this.provider.windowtype.length == 0
-        ) {
-          this.servicewindow = "اجمالي عدد الطابور";
+        // if (
+        //   this.provider.windowtype == null ||
+        //   this.provider.windowtype.length == 0
+        // ) {
+        //   this.servicewindow = "اجمالي عدد الطابور";
+        // }
+        if (this.provider.windowtype && this.provider.windowtype.length > 0) {
+          this.getnumberdisabled = true;
         }
       });
+    /*
+    this.provider = this.providers[this.providerkey];
+    if (this.provider.windowtype && this.provider.windowtype.length > 0) {
+      this.getnumberdisabled = true;
+    }
+    */
+
     if (this.mynumberprop != null) {
       this.mynumber = this.mynumberprop;
     }
     if (this.myserviceprop != null) {
       this.servicewindow = this.myserviceprop;
     }
+    if (this.myservicedateprop != null) {
+      this.servicedate = this.myservicedateprop;
+    }
+    if (this.mydocidprop != null) {
+      this.docid = this.mydocidprop;
+    }
+
+    //Get currently serving
+    this.getcurrentlyserving();
+  },
+  watch: {
+    showdate() {
+      //When date changes get numbers of new date
+      this.getcurrentlyserving();
+    },
   },
   mounted() {},
 };
@@ -342,7 +643,10 @@ export default {
 .v-select {
   font-size: 20px;
 }
-
+.mynumberinline {
+  font-size: 0.7em;
+  padding-bottom: 10px;
+}
 .callwindow {
   display: table-cell;
   vertical-align: middle;

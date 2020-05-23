@@ -8,10 +8,16 @@
       @setLanguage="setLanguage"
       @logout="clearroles"
     />
-    <!-- <br /><br /><br />
 
-    {{ 3600000 | duration("humanize") }}
-    <p>{{ $t("message.hello", { msg: "hello" }) }}</p> -->
+    <!-- {{
+      <br /><br /><br />
+      $moment()
+        .add(1, "d")
+        .format("YYYY-MM-DD")
+    }} -->
+
+    <!-- {{ 3600000 | duration("humanize") }} -->
+    <!-- <p>{{ $t("message.hello", { msg: "hello" }) }}</p> -->
 
     <router-view
       class="rv"
@@ -19,13 +25,17 @@
       :dir="direction"
       :lang="lang"
       :ta="textalign"
+      :showtime="showtime"
+      :showdate="showdate"
       :ur="CurrentUserRoles"
       :providers="providers"
       :mynumberprop="clientdata.clientnumber"
       :myproviderprop="clientdata.clientprovider"
       :myserviceprop="clientdata.clientservice"
+      :myservicedateprop="clientdata.servicedate"
       :clientname="clientdata.clientname"
       :clientphone="clientdata.clientphone"
+      :mydocidprop="clientdata.docid"
       @getdistance="getproviders"
       @updateclient="updateclient"
     />
@@ -35,7 +45,11 @@
     <div id="recaptcha"></div>
   </div>
 </template>
-
+<script
+  data-ad-client="ca-pub-8323299523569993"
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+></script>
 <script>
 document.title = "Taboor";
 
@@ -61,6 +75,7 @@ export default {
       providers: {},
       loadcompleted: false,
       showtime: null,
+      showdate: null,
       lang: "ar-ly",
       direction: "rtl",
       textalign: "right",
@@ -70,6 +85,8 @@ export default {
         clientnumber: null,
         clientprovider: null,
         clientservice: null,
+        servicedate: null,
+        docid: null,
       },
     };
   },
@@ -86,7 +103,9 @@ export default {
       clientphone,
       clientnumber,
       clientprovider,
-      clientservice
+      clientservice,
+      servicedate,
+      docid
     ) {
       //clientname
       if (this.$session.exists("clientname")) {
@@ -133,9 +152,30 @@ export default {
       } else {
         this.clientdata.clientservice = null;
       }
+
+      //servicedate
+      this.clientdata.servicedate = servicedate;
+      if (this.$session.exists("servicedate")) {
+        this.clientdata.servicedate = this.$session.get("servicedate");
+      } else if (servicedate) {
+        this.clientdata.servicedate = servicedate;
+      } else {
+        this.clientdata.servicedate = null;
+      }
+
+      //docid
+      this.clientdata.docid = docid;
+      if (this.$session.exists("docid")) {
+        this.clientdata.docid = this.$session.get("docid");
+      } else if (docid) {
+        this.clientdata.docid = docid;
+      } else {
+        this.clientdata.docid = null;
+      }
     },
     timenow() {
       this.showtime = moment().format("YYYY-MM-DD  - hh:mm:ss a");
+      this.showdate = moment().format("YYYY-MM-DD");
     },
     clearroles() {
       this.CurrentUserRoles = {};
@@ -144,14 +184,25 @@ export default {
     },
     logout() {
       console.log("logout");
-      this.$session.remove("clientname");
-      this.$session.remove("clientphone");
+      // this.$session.remove("clientname");
+      // this.$session.remove("clientphone");
       this.$session.remove("clientnumber");
       this.$session.remove("clientprovider");
       this.$session.remove("clientservice");
+      this.$session.remove("servicedate");
+      this.$session.remove("docid");
       this.clientdata.clientnumber = null;
       this.clientdata.clientprovider = null;
       this.clientdata.clientservice = null;
+      this.clientdata.servicedate = null;
+      this.clientdata.docid = null;
+
+      //Remove session in case of refresh
+      this.$session.remove("servingclientname");
+      this.$session.remove("servingclientphone");
+      this.$session.remove("servingnumber");
+      this.$session.remove("servingwindow");
+      this.$session.remove("mywindow");
 
       //TEMPORARY HERE
       firebase
@@ -159,11 +210,16 @@ export default {
         .signOut()
         .then(() => {
           firebase.auth().onAuthStateChanged(() => {
-            this.$router.push({ name: "Login", query: {} });
+            if (this.$router.currentRoute.name != "Dashboard") {
+              this.$router.push({ name: "Dashboard", query: {} });
+            }
           });
         });
     },
     getproviders(mylocation) {
+      //var workingdays = [1, 2, 3, 4, 7]; //5 Thursday and 6 Friday
+      // var workingdays = [1, 2, 3, 4, 5, 6, 7]; //5 Thursday and 6 Friday
+      //console.log(this.$moment().isoWeekday());
       db.collection("users")
         .orderBy("servicetype")
         .onSnapshot((querySnapshot) => {
@@ -183,6 +239,49 @@ export default {
                 );
               } else {
                 this.providers[doc.id].distance = 0;
+              }
+            }
+            if (
+              doc.data().opentime &&
+              doc.data().closetime &&
+              doc.data().opendays
+            ) {
+              var opentimeAr = doc.data().opentime.split(":");
+              var opentime =
+                +opentimeAr[0] * 60 * 60 + +opentimeAr[1] * 60 + +opentimeAr[2];
+
+              var closetimeAr = doc.data().closetime.split(":");
+              var closetime =
+                +closetimeAr[0] * 60 * 60 +
+                +closetimeAr[1] * 60 +
+                +closetimeAr[2];
+
+              var nowinseconds =
+                this.$moment().format("X") -
+                this.$moment(this.$moment().format("YYYY-MM-DD")).format("X");
+              // console.log(
+              //   "today",
+              //   this.$moment().isoWeekday(),
+              //   doc.data().opendays
+              // );
+              // console.log(
+              //   "nowinseconds",
+              //   nowinseconds,
+              //   "opentime",
+              //   opentime,
+              //   "closetime",
+              //   closetime
+              // );
+
+              if (
+                nowinseconds > opentime &&
+                nowinseconds < closetime &&
+                doc.data().opendays.includes(this.$moment().isoWeekday())
+              ) {
+                this.providers[doc.id].opennow = true;
+                //console.log("open");
+              } else {
+                this.providers[doc.id].opennow = false;
               }
             }
           });
@@ -375,6 +474,9 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+.modal-content {
+  font-family: "Cairo", "Helvetica Neue", "Helvetica", "sans-serif", "Arial";
 }
 
 #nav {

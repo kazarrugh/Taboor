@@ -69,6 +69,9 @@ export default {
 </script>
 
 <style scoped>
+.container {
+  padding: 0px;
+}
 .providerinfo {
   margin: auto;
   vertical-align: middle;

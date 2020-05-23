@@ -100,9 +100,8 @@
 
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
-                id="input-group-1a"
+                id="input-group-1ab"
                 :label="$t('labels.closetime')"
-                label-for="input-1a"
                 class="input-title"
               >
                 <b-form-timepicker
@@ -110,6 +109,18 @@
                   :placeholder="$t('text.timenotset')"
                   v-model="form.closetime"
                 ></b-form-timepicker>
+              </b-form-group>
+
+              <b-form-group
+                :style="'text-align: ' + ta + ';'"
+                :label="$t('labels.opendays')"
+                class="input-title"
+              >
+                <b-form-checkbox-group
+                  size="sm"
+                  v-model="form.opendays"
+                  :options="daysofweek"
+                ></b-form-checkbox-group>
               </b-form-group>
 
               <b-form-group
@@ -330,6 +341,17 @@ export default {
     filepond,
   },
   computed: {
+    daysofweek() {
+      return [
+        { text: this.$t("days.6"), value: 6 },
+        { text: this.$t("days.7"), value: 7 },
+        { text: this.$t("days.1"), value: 1 },
+        { text: this.$t("days.2"), value: 2 },
+        { text: this.$t("days.3"), value: 3 },
+        { text: this.$t("days.4"), value: 4 },
+        { text: this.$t("days.5"), value: 5 },
+      ];
+    },
     validpassword: function() {
       if (this.password && this.password.length > 5) return true;
       else return false;
@@ -452,6 +474,7 @@ export default {
           formattedNumber: this.form.formattedNumber,
           opentime: this.form.opentime,
           closetime: this.form.closetime,
+          opendays: this.form.opendays,
           servicetype: this.form.servicetype,
           windowtype: this.form.windowtype,
           coordinates: this.form.coordinates,

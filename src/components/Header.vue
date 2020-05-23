@@ -1,7 +1,12 @@
 <template>
   <div>
     <b-navbar fixed="top" toggleable="md" type="dark" variant="dark">
-      <b-navbar-brand to="/">
+      <b-navbar-brand to="/" v-if="!disablerouter">
+        <img alt="Vue logo" src="../assets/logo.svg" height="30px" />
+        Taboor
+      </b-navbar-brand>
+
+      <b-navbar-brand v-if="disablerouter">
         <img alt="Vue logo" src="../assets/logo.svg" height="30px" />
         Taboor
       </b-navbar-brand>

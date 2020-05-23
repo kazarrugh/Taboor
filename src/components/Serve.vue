@@ -5,9 +5,10 @@
       <ProviderContact :ur="provider" :dir="dir" :ta="ta" />
       <!-- End Provider Information -->
 
-      <b-form @submit="getnumber">
+      <b-form @submit="servenumber">
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
+          :disabled="disabledserviceandwindow"
           :options="this.provider.windowtype"
           :placeholder="$t('select.typeofservice')"
           v-model="servicewindow"
@@ -26,6 +27,7 @@
         <v-select
           :options="totalwindows"
           :reduce="(option) => option.value"
+          :disabled="disabledserviceandwindow"
           :placeholder="$t('select.windownumberselect')"
           v-model="mywindow"
           :dir="dir"
@@ -43,23 +45,62 @@
         <br /><br />
         <b-button
           block
-          :disabled="servicewindow == null || nextnumber > maxnumber"
+          :disabled="!mywindow || !nextnumber"
           variant="outline-primary"
           type="submit"
           size="lg"
         >
           {{ $t("buttons.nextnumber") }}
         </b-button>
-        <!-- v-if="servingnumber" -->
+
+        {{ "Maxnumber: " + this.maxnumber }}
+        ----
+        {{ "Next Number: " + this.nextnumber }}
         <div v-if="servingnumber">
           <br /><br />
           <b-alert variant="primary" show>
-            <h2>{{ $t("alerts.currentnumber", { value: servingnumber }) }}</h2>
-            <div v-if="distance">
+            <h1>{{ $t("alerts.currentnumber", { value: servingnumber }) }}</h1>
+
+            <div v-if="clientname">
               <br />
-              <h5>{{ $t("alerts.distance", { value: distance }) }}</h5>
+              <h3>{{ clientname }}</h3>
+            </div>
+            <div v-if="clientphone">
+              <h4>{{ clientphone }}</h4>
+            </div>
+            <div v-if="timer">
+              <br />
+              <h5>{{ timer }}</h5>
             </div>
           </b-alert>
+          <b-alert
+            variant="danger"
+            :show="dismissCountDown"
+            @dismissed="dismissCountDown = 0"
+            @dismiss-count-down="countDownChanged"
+          >
+            {{ error }}
+          </b-alert>
+
+          <b-button
+            block
+            v-if="servingnumber"
+            variant="outline-danger"
+            size="lg"
+            @click="skipnumber"
+          >
+            {{ $t("buttons.skipnumber") }}
+          </b-button>
+
+          <b-button
+            block
+            v-if="servingnumber"
+            variant="outline-danger"
+            size="lg"
+            @click="doneserving"
+          >
+            {{ $t("buttons.doneserving") }}
+          </b-button>
         </div>
       </b-form>
 
@@ -67,27 +108,35 @@
 
       <Display
         :ur="provider"
+        :pk="providerkey"
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :showtime="showtime"
+        :showdate="showdate"
       />
       <!-- end currently served numbers -->
       <!-- current total numbers -->
+
       <TotalNumbers
         :ur="provider"
+        :pk="providerkey"
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :showtime="showtime"
+        :showdate="showdate"
       />
       <!-- end current total numbers -->
       <!-- Start customer reviews -->
       <Reviews
         :ur="provider"
-        :pk="ur.uid"
+        :pk="providerkey"
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
       />
+
       <!-- End customer reviews -->
     </div>
   </b-container>
@@ -104,14 +153,25 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "Serve",
-  props: ["ur", "dir", "ta", "providers"],
+  props: ["ur", "dir", "ta", "providers", "showtime", "showdate"],
   data() {
     return {
-      provider: {},
+      servicedate: null,
       servicewindow: null,
       mywindow: null,
       servingnumber: null,
       distance: null,
+      clientname: null,
+      clientphone: null,
+      servenumberdisabled: null,
+      docid: null,
+      currentnumber: null,
+      currentlyserving: null,
+      error: "",
+      dismissSecs: 5,
+      dismissCountDown: 0,
+      timer: null,
+      startTimestamp: null,
     };
   },
   components: {
@@ -121,38 +181,62 @@ export default {
     TotalNumbers,
   },
   computed: {
-    md() {
-      if (this.provider.currentnumber) {
-        return Math.ceil(12 / Object.keys(this.provider.currentnumber).length);
-      } else {
-        return "12";
-      }
+    disabledserviceandwindow() {
+      if (this.servingnumber) return true;
+      else return false;
     },
+    providerkey() {
+      return this.ur.uid;
+    },
+    provider() {
+      return this.providers[this.ur.uid];
+    },
+    // servicedate() {
+    //   return this.showdate;
+    // },
     maxnumber() {
       if (
-        this.servicewindow == null ||
-        this.provider.currentnumber == null ||
-        this.provider.currentnumber[this.servicewindow] == null
+        this.currentnumber == null ||
+        this.currentnumber[this.servicewindow] == null ||
+        this.currentnumber[this.servicewindow].number == null
       ) {
         return null;
+      } else {
+        return this.currentnumber[this.servicewindow].number;
       }
-      return this.provider.currentnumber[this.servicewindow];
+    },
+    cancelednumbers() {
+      if (
+        this.currentnumber == null ||
+        this.currentnumber[this.servicewindow] == null ||
+        this.currentnumber[this.servicewindow].canceled == null
+      ) {
+        return null;
+      } else {
+        return this.currentnumber[this.servicewindow].canceled;
+      }
     },
     nextnumber() {
       if (
-        this.servicewindow == null ||
-        this.provider.currentlyserving == null ||
-        this.provider.currentlyserving[this.servicewindow] == null
+        this.currentlyserving == null ||
+        this.currentlyserving[this.servicewindow] == null ||
+        this.currentlyserving[this.servicewindow].servingnumber == null
       ) {
-        return 1;
+        var nextnumber = 1;
+      } else {
+        nextnumber =
+          this.currentlyserving[this.servicewindow].servingnumber + 1;
       }
-      var arr = Object.values(
-        this.provider.currentlyserving[this.servicewindow]
-      );
-      var max = arr.reduce(function(a, b) {
-        return Math.max(a, b);
-      });
-      return max + 1;
+      if (this.cancelednumbers && this.cancelednumbers.length > 0) {
+        while (this.cancelednumbers.includes(nextnumber)) {
+          nextnumber++;
+        }
+      }
+      if (nextnumber > this.maxnumber) {
+        return null;
+      } else {
+        return nextnumber;
+      }
     },
     totalwindows() {
       var tw = [];
@@ -165,80 +249,459 @@ export default {
     },
   },
   methods: {
-    getnumber(evt) {
-      evt.preventDefault();
-      this.distance = null;
+    addnewnumber() {
+      //WE HAVE TO MAKE SURE THAT SOMEONE IS IN LINE BEFORE SERVING THEM
+      if (this.maxnumber) {
+        this.servingnumber = 1;
+        console.log("adding servingnumber 1 ", this.servingnumber);
 
-      if (this.provider.currentlyserving == null) {
-        this.provider.currentlyserving = {};
+        db.collection("currentlyserving")
+          .add({
+            provider: this.providerkey,
+            servicedate: this.servicedate,
+            servicewindow: this.servicewindow,
+            inservice: { [this.mywindow]: this.servingnumber },
+            servingnumber: this.servingnumber,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          })
+          .then((doc) => {
+            this.docid = doc.id;
+            this.servenumberfollowup();
+
+            //Delete the service wait time
+            db.collection("users")
+              .doc(this.providerkey)
+              .set(
+                {
+                  time: {
+                    [this
+                      .servicewindow]: firebase.firestore.FieldValue.delete(),
+                  },
+                },
+                { merge: true }
+              );
+            console.log(
+              "Delted time for user ",
+              this.providerkey,
+              " service ",
+              this.servicewindow
+            );
+          });
+      } else {
+        console.log("Not adding to firestore because maxnumber is null!");
+      }
+    },
+    skipnumber() {
+      //NEEDS WORK
+      //Clicked if someone is not served
+
+      console.log("skipping number");
+      if (this.nextnumber) {
+        this.servenumber("skipnumber");
+      } else {
+        this.cleanupnumber();
       }
 
-      if (this.provider.currentlyserving[this.servicewindow] == null) {
-        this.provider.currentlyserving[this.servicewindow] = {};
+      //Clean up number happens in servenumber
+    },
+    doneserving() {
+      //NEEDS WORK
+      //In case all people in line are served, including the people currently served
+
+      //Save Service time of last service
+      this.saveservicetime(this.timer, this.providerkey, this.servicewindow);
+      this.cleanupnumber();
+    },
+    saveservicetime(timer, providerkey, servicewindow) {
+      console.log("Saving Service Time");
+      if (timer) {
+        var t = timer.split(":");
+        var servicetimeinseconds = +t[0] * 60 * 60 + +t[1] * 60 + +t[2];
+        // Commit to Firestore
+        // db.collection("users")
+        //   .doc(this.pk)
+        //   .update({
+        //     numRatings: newNumRatings,
+        //     avgRating: newAvgRating,
+        //   });
+        var timerDocRef = db.collection("users").doc(providerkey);
+        return db
+          .runTransaction((transaction) => {
+            return transaction.get(timerDocRef).then((timerDoc) => {
+              if (!timerDoc.exists) {
+                throw "Document does not exist!";
+              }
+              if (
+                timerDoc.data().time &&
+                timerDoc.data().time[servicewindow] &&
+                timerDoc.data().time[servicewindow].AvgTime &&
+                timerDoc.data().time[servicewindow].NumTimes
+              ) {
+                var AvgTime = timerDoc.data().time[servicewindow].AvgTime;
+
+                var NumTimes = timerDoc.data().time[servicewindow].NumTimes;
+
+                console.log(
+                  "servicetimeinseconds",
+                  servicetimeinseconds,
+                  "AvgTime: ",
+                  AvgTime,
+                  "NumTimes: ",
+                  NumTimes
+                );
+
+                // Compute new average rating
+                var oldAvgTime = AvgTime * NumTimes;
+
+                var newNumTimes = NumTimes + 1;
+
+                var newAvgTime =
+                  (oldAvgTime + servicetimeinseconds) / newNumTimes;
+
+                console.log(
+                  "newNumTimes: ",
+                  newNumTimes,
+                  "oldAvgTime: ",
+                  oldAvgTime,
+                  "newAvgTime: ",
+                  newAvgTime
+                );
+              } else {
+                newNumTimes = 1;
+                newAvgTime = servicetimeinseconds;
+              }
+
+              // var newPopulation = timerDoc.data().population + 1;
+              var timeobj = {
+                [servicewindow]: {
+                  NumTimes: newNumTimes,
+                  AvgTime: newAvgTime,
+                },
+              };
+              console.log("saving time obj", timeobj);
+              transaction.set(timerDocRef, { time: timeobj }, { merge: true });
+            });
+          })
+          .then(() => {
+            console.log("Save Time Transaction successfully committed!");
+          })
+          .catch((error) => {
+            console.log("Save Time Transaction failed: ", error);
+          });
+      } else {
+        console.log("there was no timer to save");
       }
-
-      //Delete cordinates of the last served number
-      db.collection("users")
-        .doc(this.ur.uid)
-        .update({
-          ["clientlocations." +
-          this.servicewindow +
-          "." +
-          this.servingnumber]: firebase.firestore.FieldValue.delete(),
-        });
-
-      //Set serving number to be the next number
-      this.servingnumber = this.nextnumber;
-
-      //Update local data object
-      this.provider.currentlyserving[this.servicewindow][
-        this.mywindow
-      ] = this.servingnumber;
-
-      //Update remote data object
-      db.collection("users")
-        .doc(this.ur.uid)
-        .update({
-          currentlyserving: this.provider.currentlyserving,
-        });
-
-      //Check distance with the client
-
-      if (
-        this.provider.clientlocations &&
-        this.provider.clientlocations[this.servicewindow] &&
-        this.provider.clientlocations[this.servicewindow][this.servingnumber]
-      ) {
-        var clientcoordinates = this.provider.clientlocations[
-          this.servicewindow
-        ][this.servingnumber];
-      }
-      if (this.provider.coordinates != null && clientcoordinates != null) {
-        this.distance = getDistance(
-          { latitude: clientcoordinates.Pc, longitude: clientcoordinates.Vc },
-          {
-            latitude: this.provider.coordinates.Pc,
-            longitude: this.provider.coordinates.Vc,
-          }
+    },
+    cleanupnumber() {
+      console.log("cleaning up number", this.servingnumber);
+      //Delete the number from currentlysering inservice object
+      if (this.docid) {
+        console.log(
+          "deleting number from inservice window",
+          this.mywindow,
+          "docid",
+          this.docid
         );
+        db.collection("currentlyserving")
+          .doc(this.docid)
+          .set(
+            {
+              inservice: {
+                [this.mywindow]: firebase.firestore.FieldValue.delete(),
+              },
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
       }
 
-      //End Distance
+      //Delete local data
+      this.distance = null;
+      this.clientname = null;
+      this.clientphone = null;
+      this.servingnumber = null;
+      this.timer = null;
+
+      //Remove session in case of refresh
+      this.$session.remove("servingclientname");
+      this.$session.remove("servingclientphone");
+      this.$session.remove("servingnumber");
+      this.$session.remove("servingwindow");
+      this.$session.remove("mywindow");
+    },
+    servenumber(evt) {
+      this.servenumberdisabled = true;
+      if (evt != "skipnumber") {
+        evt.preventDefault();
+        //Disable Get Number button
+
+        //Save Service time of last service
+        this.saveservicetime(this.timer, this.providerkey, this.servicewindow);
+      }
+      //Clean Up last number
+      this.cleanupnumber();
+
+      db.collection("currentlyserving")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.servicedate)
+        .where("servicewindow", "==", this.servicewindow)
+        .get({ source: "server" })
+        .then((querySnapshot) => {
+          console.log("querySnapshot.size is ", querySnapshot.size);
+          if (querySnapshot.size == 0) {
+            //In case this is a new date
+            this.addnewnumber();
+          } else {
+            querySnapshot.forEach((doc) => {
+              if (doc.data().servingnumber) {
+                this.docid = doc.id;
+
+                //Start Transaction
+                var snDocRef = db
+                  .collection("currentlyserving")
+                  .doc(this.docid);
+
+                return db
+                  .runTransaction((transaction) => {
+                    // This code may get re-run multiple times if there are conflicts.
+                    return transaction.get(snDocRef).then((snDoc) => {
+                      if (!snDoc.exists) {
+                        throw "Document does not exist!";
+                      }
+
+                      var servingnumber = snDoc.data().servingnumber + 1;
+                      console.log(
+                        "servingnumber before checking canceled",
+                        servingnumber
+                      );
+
+                      //Check if serving number is not in the canceled numbers
+                      if (
+                        this.cancelednumbers &&
+                        this.cancelednumbers.length > 0
+                      ) {
+                        while (this.cancelednumbers.includes(servingnumber)) {
+                          servingnumber++;
+                        }
+                      }
+
+                      console.log(
+                        "servingnumber before transaction",
+                        servingnumber
+                      );
+                      if (servingnumber <= this.maxnumber) {
+                        transaction.set(
+                          snDocRef,
+                          {
+                            servingnumber: servingnumber,
+                            inservice: { [this.mywindow]: servingnumber },
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                          },
+                          { merge: true }
+                        );
+                        return servingnumber;
+                      } else {
+                        return Promise.reject(
+                          "No more people in line to serve."
+                        );
+                      }
+                    });
+                  })
+                  .then((servingnumber) => {
+                    console.log("Transaction servingnumber:", servingnumber);
+                    this.servingnumber = servingnumber;
+                    this.servenumberfollowup();
+                  })
+                  .catch((error) => {
+                    //console.log("Transaction failed: ", error);
+                    if (error == "No more people in line to serve.") {
+                      this.error = this.$t("alerts.nomorepeople");
+                      this.showAlert();
+                    }
+                  });
+              } else {
+                console.log(doc.id, " doc id Doesnt contain a serving number");
+                this.addnewnumber();
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = this.$t("alerts.offline");
+          this.showAlert();
+          //Enable Serve Number button
+          this.servenumberdisabled = false;
+        });
+    },
+    servenumberfollowup() {
+      if (this.currentnumber && this.currentnumber[this.servicewindow]) {
+        //START GET CLIENT NAME
+        if (
+          this.currentnumber[this.servicewindow].clientnames &&
+          this.currentnumber[this.servicewindow].clientnames[this.servingnumber]
+        ) {
+          this.clientname = this.currentnumber[this.servicewindow].clientnames[
+            this.servingnumber
+          ];
+        }
+        //END GET CLIENT NAME
+        //
+        //START GET CLIENT Phone
+        if (
+          this.currentnumber[this.servicewindow].clientphones &&
+          this.currentnumber[this.servicewindow].clientphones[
+            this.servingnumber
+          ]
+        ) {
+          this.clientphone = this.currentnumber[
+            this.servicewindow
+          ].clientphones[this.servingnumber];
+        }
+        //END GET CLIENT Phone
+        //
+        //START GET CLIENT Distance
+        if (
+          this.currentnumber[this.servicewindow].clientlocations &&
+          this.currentnumber[this.servicewindow].clientlocations[
+            this.servingnumber
+          ]
+        ) {
+          var clientcoordinates = this.currentnumber[this.servicewindow]
+            .clientlocations[this.servingnumber];
+        }
+
+        if (this.provider.coordinates != null && clientcoordinates != null) {
+          this.distance = getDistance(
+            { latitude: clientcoordinates.Pc, longitude: clientcoordinates.Vc },
+            {
+              latitude: this.provider.coordinates.Pc,
+              longitude: this.provider.coordinates.Vc,
+            }
+          );
+
+          this.error = this.$t("alerts.distance", { value: this.distance });
+          this.showAlert();
+        }
+        //END GET CLIENT Distance
+
+        //Start recording time of service
+
+        this.startTimestamp = this.$moment().startOf("day");
+      }
+
+      //Save in session in case of refresh
+      this.$session.set("servingclientname", this.clientname);
+      this.$session.set("servingclientphone", this.clientphone);
+      this.$session.set("servingnumber", this.servingnumber);
+      this.$session.set("servingwindow", this.servingwindow);
+      this.$session.set("mywindow", this.mywindow);
+
+      //Enable Serve Number button
+      this.servenumberdisabled = false;
+    },
+
+    getcurrentnumbers() {
+      console.log(
+        "getting numbers pk ",
+        this.providerkey,
+        "date: ",
+        this.servicedate
+      );
+      db.collection("currentnumber")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.servicedate)
+        .onSnapshot((snapshot) => {
+          this.currentnumber = {};
+          snapshot.forEach((doc) => {
+            this.currentnumber[doc.data().servicewindow] = doc.data();
+            this.currentnumber[doc.data().servicewindow].id = doc.id;
+            console.log(doc.id);
+          });
+        });
+    },
+    getcurrentlyserving() {
+      console.log(
+        "currentlyserving pk ",
+        this.providerkey,
+        "date: ",
+        this.servicedate
+      );
+      db.collection("currentlyserving")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.servicedate)
+        .onSnapshot((snapshot) => {
+          this.currentlyserving = {};
+          snapshot.forEach((doc) => {
+            this.currentlyserving[doc.data().servicewindow] = doc.data();
+            this.currentlyserving[doc.data().servicewindow].id = doc.id;
+          });
+        });
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert() {
+      this.dismissCountDown = this.dismissSecs;
+    },
+    startTimer() {
+      setInterval(() => {
+        if (this.servingnumber != null) {
+          this.startTimestamp.add(1, "second");
+          this.timer = this.startTimestamp.format("HH:mm:ss");
+        }
+      }, 1000);
+    },
+  },
+  watch: {
+    showdate() {
+      //When date changes get numbers of new date
+      this.getcurrentnumbers();
+      this.getcurrentlyserving();
     },
   },
   beforeCreate() {},
   created() {
-    db.collection("users")
-      .doc(this.ur.uid)
-      .onSnapshot((doc) => {
-        this.provider = doc.data();
-        if (
-          this.provider.windowtype == null ||
-          this.provider.windowtype.length == 0
-        ) {
-          this.servicewindow = "اجمالي عدد الطابور";
-        }
-      });
+    // db.collection("users")
+    //   .doc(this.ur.uid)
+    //   .onSnapshot((doc) => {
+    //     this.provider = doc.data();
+    //     if (
+    //       this.provider.windowtype == null ||
+    //       this.provider.windowtype.length == 0
+    //     ) {
+    //       this.servicewindow = "اجمالي عدد الطابور";
+    //     }
+    //   });
+
+    //Get today's date
+    this.servicedate = this.$moment().format("YYYY-MM-DD");
+    console.log("servicedate", this.servicedate);
+    this.startTimestamp = this.$moment().startOf("day");
+    this.startTimer();
+    this.getcurrentnumbers();
+    this.getcurrentlyserving();
+
+    if (this.$session.exists("servingclientname")) {
+      this.clientname = this.$session.get("servingclientname");
+    }
+
+    if (this.$session.exists("servingclientphone")) {
+      this.clientphone = this.$session.get("servingclientphone");
+    }
+
+    if (this.$session.exists("servingnumber")) {
+      this.servingnumber = this.$session.get("servingnumber");
+    }
+
+    if (this.$session.exists("servingwindow")) {
+      this.servingwindow = this.$session.get("servingwindow");
+    }
+
+    if (this.$session.exists("mywindow")) {
+      this.mywindow = this.$session.get("mywindow");
+    }
   },
   mounted() {},
 };

@@ -24,6 +24,7 @@
     "vue-filepond": "^6.0.2",
     "vue-i18n": "^8.17.7",
     "vue-moment": "^4.1.0",
+    "vue-number-animation": "^1.0.5",
     "vue-phone-number-input": "^1.1.9",
     "vue-pwa-install": "^1.1.0",
     "vue-qr-reader": "^1.6.2",

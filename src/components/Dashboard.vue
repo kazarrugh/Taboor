@@ -34,21 +34,46 @@
           <h2>3</h2>
           <h2>4</h2> -->
           <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
-            <b-card :header="pro.displayName" @click="viewprovider(pro.id)">
+            <b-card>
+              <b-card-header @click="viewprovider(pro.id)">
+                <b-icon-house-door-fill v-if="pro.opennow == true" />
+                <b-icon-house-fill v-if="pro.opennow == false" />
+                {{ pro.displayName }}
+              </b-card-header>
               <b-list-group flush>
-                <b-list-group-item>
+                <b-list-group-item @click="viewprovider(pro.id)">
                   <div
                     class="customimg"
                     :style="'background-image: url(' + pro.logo + ');'"
                   ></div>
                 </b-list-group-item>
               </b-list-group>
-              <a :href="'tel:' + pro.phoneNumber">
-                <b-card-footer>
-                  <b-icon-phone />
-                  {{ pro.phoneNumber }}
-                </b-card-footer>
-              </a>
+
+              <b-card-footer>
+                <b-row>
+                  <b-col v-if="pro.phoneNumber">
+                    <a :href="'tel:' + pro.phoneNumber">
+                      <b-icon-phone />
+                      {{ pro.phoneNumber }}
+                    </a>
+                  </b-col>
+                  <b-col cols="5" v-if="pro.coordinates">
+                    <a
+                      target="_blank"
+                      :href="
+                        'http://www.google.com/maps/place/' +
+                          pro.coordinates.Pc +
+                          ',' +
+                          pro.coordinates.Vc
+                      "
+                      v-if="pro.coordinates"
+                    >
+                      <b-icon-geo-alt to="maps.google.com" />
+                      {{ $t("buttons.map") }}
+                    </a>
+                  </b-col>
+                </b-row>
+              </b-card-footer>
             </b-card>
           </div>
           <!-- In Case the array is empty, give empty div for slick -->
@@ -220,10 +245,10 @@ export default {
   -ms-touch-action: auto;
 }
 .card {
-  cursor: pointer;
   margin: 5px;
 }
 .card-header {
+  cursor: pointer;
   font-size: 1.3em;
 }
 .card-body {
@@ -231,10 +256,11 @@ export default {
   min-height: 200px;
   /* max-height: 200px; */
   position: relative;
+  cursor: pointer;
 }
 .card-footer {
-  direction: ltr;
-  font-size: 1.3em;
+  font-size: 1em;
+  cursor: default;
 }
 
 a {

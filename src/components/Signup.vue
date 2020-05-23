@@ -128,6 +128,7 @@ export default {
               formattedNumber: null,
               opentime: null,
               closetime: null,
+              opendays: null,
               servicetype: null,
               windowtype: null,
               coordinates: null,

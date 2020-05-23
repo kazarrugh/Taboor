@@ -75,7 +75,7 @@
             id="modal-forgot-password"
             :title="$t('text.forgotpassword')"
             :ok-title="$t('buttons.ok')"
-            :cancel-title="$t('buttons.cancle')"
+            :cancel-title="$t('buttons.cancel')"
             @ok="resetpassword"
           >
             <b-form-group
@@ -120,14 +120,14 @@ export default {
       loading: false,
     };
   },
-  props: ["dir", "ta", "ur"],
+  props: ["dir", "ta", "ur", "lang"],
   methods: {
     resetpassword() {
       firebase
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.error = "تم ارسال بريد الكتروني لتدوين كلمة مرور جديدة";
+          this.error = this.$t("alerts.resetemail");
           this.showAlert();
         })
         .catch((error) => {
@@ -159,16 +159,24 @@ export default {
           this.loading = false;
           this.loginbuttondisabled = false;
           if (
-            error.message ==
-            "The password is invalid or the user does not have a password."
+            (this.lang =
+              "ar-ly" &&
+              error.message ==
+                "The password is invalid or the user does not have a password.")
           ) {
             this.error = "كلمة المرور غير صحيحة";
           } else if (
-            error.message ==
-            "There is no user record corresponding to this identifier. The user may have been deleted."
+            (this.lang =
+              "ar-ly" &&
+              error.message ==
+                "There is no user record corresponding to this identifier. The user may have been deleted.")
           ) {
             this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
-          } else if (error.message == "The email address is badly formatted.") {
+          } else if (
+            (this.lang =
+              "ar-ly" &&
+              error.message == "The email address is badly formatted.")
+          ) {
             this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
           } else {
             this.error = error.message;

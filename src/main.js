@@ -43,6 +43,9 @@ Vue.use(VueQrcodeReader);
 import VueSessionStorage from "vue-sessionstorage";
 Vue.use(VueSessionStorage);
 
+import VueNumber from "vue-number-animation";
+Vue.use(VueNumber);
+
 import * as VueGoogleMaps from "vue2-google-maps";
 import { gmapApi } from "./api.js";
 

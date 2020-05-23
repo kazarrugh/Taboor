@@ -12,6 +12,18 @@ service cloud.firestore {
     match /translations/{t} {
         allow read,update,write;
     }
+    match /currentnumber/{cn} {
+        allow read,update,write;
+    }
+    match /clientlocations/{cl} {
+        allow read,update,write;
+    }
+    match /clientcontacts/{cc} {
+        allow read,update,write;
+    }
+    match /currentlyserving/{cs} {
+        allow read,update,write;
+    }
     // match /{document=**} {
     //   allow read,update;
     //   allow write: if request.auth.uid != null;
