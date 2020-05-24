@@ -1,47 +1,47 @@
 <template>
-  <b-container class="container" :dir="dir">
-    <div v-if="Object.keys(this.reviews).length > 0">
-      <b-alert show variant="dark" class="bold">
-        {{ $t("alerts.servicerating") }}
-      </b-alert>
-      <b-row fluid>
-        <b-col
-          v-for="(review, key) in reviews"
-          v-bind:key="key"
-          cols="12"
-          :md="md"
+  <div v-if="Object.keys(this.reviews).length > 0">
+    <!-- <b-container class="container" :dir="dir"> -->
+    <b-alert show variant="dark" class="bold">
+      {{ $t("alerts.servicerating") }}
+    </b-alert>
+    <b-row fluid>
+      <b-col
+        v-for="(review, key) in reviews"
+        v-bind:key="key"
+        cols="12"
+        :md="md"
+      >
+        <b-card
+          :header="servicewindow"
+          class="mb-2"
+          :style="'min-height:' + minheight + 'px;'"
         >
-          <b-card
-            :header="servicewindow"
-            class="mb-2"
-            :style="'min-height:' + minheight + 'px;'"
-          >
-            <b-card-body>
-              <b-form-rating
-                :value="review.rating"
-                readonly
-                show-value
-                precision="1"
-              ></b-form-rating>
-            </b-card-body>
-            <b-card-body>
-              <b-card-title>{{ review.displayName }}</b-card-title>
-              <b-card-sub-title class="mb-2">
-                {{ review.phoneNumber }}
-              </b-card-sub-title>
+          <b-card-body>
+            <b-form-rating
+              :value="review.rating"
+              readonly
+              show-value
+              precision="1"
+            ></b-form-rating>
+          </b-card-body>
+          <b-card-body>
+            <b-card-title>{{ review.displayName }}</b-card-title>
+            <b-card-sub-title class="mb-2">
+              {{ review.phoneNumber }}
+            </b-card-sub-title>
 
-              <b-card-text :style="'text-align:' + ta + ';'">
-                {{ review.comment }}
-              </b-card-text>
-            </b-card-body>
-            <template v-slot:footer>
-              {{ review.createdAt.seconds | moment("from") }}
-            </template>
-          </b-card>
-        </b-col>
-      </b-row>
-    </div>
-  </b-container>
+            <b-card-text :style="'text-align:' + ta + ';'">
+              {{ review.comment }}
+            </b-card-text>
+          </b-card-body>
+          <template v-slot:footer>
+            {{ review.createdAt.seconds | moment("from") }}
+          </template>
+        </b-card>
+      </b-col>
+    </b-row>
+    <!-- </b-container> -->
+  </div>
 </template>
 
 <script>
@@ -86,6 +86,10 @@ export default {
 </script>
 
 <style scoped>
+.container {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 .card-body {
   padding: 0em;
 }

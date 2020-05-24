@@ -1,59 +1,59 @@
 <template>
-  <div>
-    <b-container class="container" :dir="dir">
-      <!-- {{ currentlyserving }} -->
-      <!-- currently served numbers -->
+  <div :dir="dir" :class="container">
+    <!-- <b-container class="container" :dir="dir"> -->
+    <!-- {{ currentlyserving }} -->
+    <!-- currently served numbers -->
 
-      <b-alert :show="showtitle" variant="dark" class="bold">
-        {{ $t("alerts.currentlyserved") }}
-      </b-alert>
+    <b-alert :show="showtitle" variant="dark" class="bold">
+      {{ $t("alerts.currentlyserved") }}
+    </b-alert>
 
-      <div v-if="this.currentlyserving && this.currentlyservingsize > 0">
-        <b-row fluid>
-          <b-col
-            v-for="(cn, label) in currentlyserving"
-            v-bind:key="label"
-            :cols="cols"
-            :md="md"
+    <div v-if="this.currentlyserving && this.currentlyservingsize > 0">
+      <b-row fluid>
+        <b-col
+          v-for="(cn, label) in currentlyserving"
+          v-bind:key="label"
+          :cols="cols"
+          :md="md"
+        >
+          <b-card
+            v-if="servicewindow == null || servicewindow == cn.servicewindow"
+            :header="cn.servicewindow"
+            class="mb-2"
+            :style="'min-height:' + minheight + 'px;'"
+            :id="label"
           >
-            <b-card
-              v-if="servicewindow == null || servicewindow == cn.servicewindow"
-              :header="cn.servicewindow"
-              class="mb-2"
-              :style="'min-height:' + minheight + 'px;'"
-              :id="label"
-            >
-              <b-card-body>
-                <b-row
-                  style="margin:0px"
-                  v-for="(number, window) in cn.inservice"
-                  v-bind:key="window"
-                  :id="label + '-' + window"
-                >
-                  <b-col class="bordered">
-                    {{ $t("labels.window") }}
-                    <span class="bold"><number :to="window"/></span>
-                  </b-col>
-                  <b-col class="bordered">
-                    {{ $t("labels.number") }}
-                    <span class="bold"><number :to="number" /> </span>
-                  </b-col>
-                </b-row>
-              </b-card-body>
-              <template v-slot:footer v-if="cn.updatedAt">
-                {{ $t("text.lastupdated") }}
-                {{ cn.updatedAt.seconds | moment("from") }}
-              </template>
-            </b-card>
-          </b-col>
-        </b-row>
-        <!-- In Case servicewindow is selected -->
-      </div>
-      <!-- end currently served numbers -->
-      <div style="display:none;">
-        {{ showtime }}
-      </div>
-    </b-container>
+            <b-card-body>
+              <b-row
+                style="margin:0px"
+                v-for="(number, window) in cn.inservice"
+                v-bind:key="window"
+                :id="label + '-' + window"
+              >
+                <b-col class="bordered">
+                  {{ $t("labels.window") }}
+                  <span class="bold"><number :to="window"/></span>
+                </b-col>
+                <b-col class="bordered">
+                  {{ $t("labels.number") }}
+                  <span class="bold"><number :to="number" /> </span>
+                </b-col>
+              </b-row>
+            </b-card-body>
+            <template v-slot:footer v-if="cn.updatedAt">
+              {{ $t("text.lastupdated") }}
+              {{ cn.updatedAt.seconds | moment("from") }}
+            </template>
+          </b-card>
+        </b-col>
+      </b-row>
+      <!-- In Case servicewindow is selected -->
+    </div>
+    <!-- end currently served numbers -->
+    <div style="display:none;">
+      {{ showtime }}
+    </div>
+    <!-- </b-container> -->
   </div>
 </template>
 
@@ -81,6 +81,10 @@ export default {
       )
         return true;
       else return false;
+    },
+    container() {
+      if (this.$router.currentRoute.name == "Display") return "container";
+      else return "";
     },
     cols() {
       if (this.currentlyservingsize != null) {
@@ -139,7 +143,7 @@ export default {
   },
   methods: {
     updatednumber(id, classchange) {
-      console.log("card alert id", id);
+      // console.log("card alert id", id);
       if (document.getElementById(id)) {
         //Check if it is still there or deleted
         document.getElementById(id).classList.add(classchange);
@@ -151,12 +155,12 @@ export default {
       }, 3000);
     },
     getcurrentlyserving() {
-      console.log(
-        "currently serving numbers with date ",
-        this.servicedate,
-        "pk",
-        this.providerkey
-      );
+      // console.log(
+      //   "currently serving numbers with date ",
+      //   this.servicedate,
+      //   "pk",
+      //   this.providerkey
+      // );
       // Start Listen for snapshot
       db.collection("currentlyserving")
         .where("provider", "==", this.providerkey)
@@ -168,12 +172,12 @@ export default {
             //   console.log("New: ", change.doc.data());
             // }
             if (change.type === "modified") {
-              console.log("Modified ERROR: ", change.doc.data());
-              console.log("Modified Number: ", change.doc.data().servingnumber);
-              console.log(
-                "Modified servicewindow: ",
-                change.doc.data().servicewindow
-              );
+              // console.log("Modified ERROR: ", change.doc.data());
+              // console.log("Modified Number: ", change.doc.data().servingnumber);
+              // console.log(
+              //   "Modified servicewindow: ",
+              //   change.doc.data().servicewindow
+              // );
 
               if (
                 change.doc.data().inservice &&
@@ -183,14 +187,14 @@ export default {
                 change.doc.data().inservice !=
                   this.lastcurrentlyserving[change.doc.id].inservice
               ) {
-                console.log("Modified: ", change.doc.id);
+                // console.log("Modified: ", change.doc.id);
                 this.updatednumber(change.doc.id, "card-alert-blue");
 
                 //Find the window that was changed in the object inservice
                 var o1 = this.lastcurrentlyserving[change.doc.id].inservice;
                 var o2 = change.doc.data().inservice;
-                console.log("old inservice: ", o1);
-                console.log("new inservice: ", o2);
+                // console.log("old inservice: ", o1);
+                // console.log("new inservice: ", o2);
 
                 let diff = Object.keys(o2).reduce((diff, key) => {
                   if (o1[key] === o2[key]) return diff;
@@ -199,9 +203,9 @@ export default {
                     [key]: o2[key],
                   };
                 }, {});
-                console.log("diff:", diff);
+                // console.log("diff:", diff);
                 Object.keys(diff).forEach((window) => {
-                  console.log("window changed", window);
+                  // console.log("window changed", window);
                   var alertid = change.doc.id + "-" + window;
                   this.updatednumber(alertid, "card-alert-red");
                 });
@@ -221,13 +225,13 @@ export default {
           snapshot.forEach((doc) => {
             if (Object.keys(doc.data().inservice).length > 0) {
               //Filter Empty Service windows
-              console.log("getting currently serving docid", doc.id);
+              // console.log("getting currently serving docid", doc.id);
               this.currentlyserving[doc.id] = doc.data();
               this.currentlyserving[doc.id].id = doc.id;
               this.currentlyservingsize++;
             } else {
               //Remove it from currently serving if it is still there
-              console.log("removing currentlyserving doc.id", doc.id);
+              // console.log("removing currentlyserving doc.id", doc.id);
               if (this.currentlyserving[doc.id]) {
                 setTimeout(() => {
                   delete this.currentlyserving[doc.id];
@@ -265,9 +269,8 @@ export default {
 
 <style scoped>
 .container {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  padding: 0px;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 .card-body {
   padding: 0px;

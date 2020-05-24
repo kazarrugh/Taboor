@@ -7,7 +7,7 @@
         </h3>
         <b-form v-if="show" @submit.prevent="updateProfile">
           <b-row align-h="center">
-            <b-col sm="6">
+            <b-col sm="7">
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1"
@@ -50,7 +50,20 @@
                 label-for="input-1a"
                 class="input-title"
               >
-                <v-select :options="servicetypes" v-model="form.servicetype">
+                <!-- <span style="display:inline;"><b-icon-plus-circle /></span> -->
+                <v-select
+                  :options="servicetypes"
+                  v-model="form.servicetype"
+                  :label="lang"
+                  :dir="dir"
+                >
+                  <!-- :reduce="(option) => option.id" -->
+                  <!-- <template v-slot:option="option">
+                    {{ [lang] }}
+                  </template> -->
+                  <!-- <template v-slot:option="option" :value="option.Item">
+                    {{option.Item}}
+                  </template> -->
                   <template #search="{attributes, events}">
                     <input
                       :required="!form.servicetype"
@@ -212,6 +225,14 @@
               <b-button @click="mapmodal = true" variant="info">
                 {{ $t("buttons.changecord") }}
               </b-button>
+
+              <b-button
+                v-if="ur.displayNameLang"
+                @click="translationmodal = true"
+                variant="secondary"
+              >
+                {{ $t("buttons.edittranslation") }}
+              </b-button>
             </b-col>
           </b-row>
         </b-form>
@@ -290,6 +311,43 @@
           ></b-form-input>
         </b-form-group>
       </b-modal>
+
+      <b-modal
+        v-model="translationmodal"
+        id="modal-3"
+        :title="$t('buttons.edittranslation')"
+        :ok-title="$t('buttons.ok')"
+        :cancel-title="$t('buttons.cancel')"
+        @ok="updateProfileLang"
+        :dir="dir"
+      >
+        <b-form-group
+          :style="'text-align: ' + ta + ';'"
+          :label="$t('labels.branch')"
+          label-for="displayname-ar"
+          class="input-title"
+          :dir="dir"
+        >
+          <b-form-input
+            v-if="ur.displayNameLang && ur.displayNameLang['ar-ly']"
+            id="displayname-ar"
+            v-model="form.displayNameLang['ar-ly']"
+            type="text"
+            required
+            placeholder="إسم الفرع باللغة العربية"
+            dir="rtl"
+          ></b-form-input>
+          <b-form-input
+            id="displayname-en"
+            v-if="ur.displayNameLang && ur.displayNameLang['en']"
+            v-model="form.displayNameLang['en']"
+            type="text"
+            required
+            placeholder="Branch Name in English"
+            dir="ltr"
+          ></b-form-input>
+        </b-form-group>
+      </b-modal>
     </b-container>
   </div>
 </template>
@@ -322,6 +380,7 @@ export default {
       newPassword: "",
       emailmodal: false,
       passwordmodal: false,
+      translationmodal: false,
       mapmodal: false,
       loading: false,
       error: "",
@@ -364,6 +423,9 @@ export default {
       if (this.validpassword && this.validnewpassword) return true;
       else return false;
     },
+    // translatedservicetypes() {
+    //   return Object.keys(this.servicetypes);
+    // },
   },
   methods: {
     convertphone(payload) {
@@ -464,26 +526,69 @@ export default {
         }
       }
     },
-    updateProfileDetails() {
+    updateProfileLang() {
       db.collection("users")
         .doc(this.ur.uid)
-        .update({
-          displayName: this.form.displayName,
-          email: this.form.email,
-          phoneNumber: this.form.phoneNumber,
-          formattedNumber: this.form.formattedNumber,
-          opentime: this.form.opentime,
-          closetime: this.form.closetime,
-          opendays: this.form.opendays,
-          servicetype: this.form.servicetype,
-          windowtype: this.form.windowtype,
-          coordinates: this.form.coordinates,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        })
+        .set(
+          {
+            displayNameLang: this.form.displayNameLang,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        )
         .then(() => {
-          this.alertmsg = "تم التخزين بنجاح";
+          this.alertmsg = this.$t("alerts.savecompleted");
           this.alertcolor = "success";
           this.showAlert();
+        });
+    },
+    updateProfileDetails() {
+      if (
+        !this.form.displayNameLang ||
+        this.ur.displayName != this.form.displayName
+      ) {
+        console.log("Getting name translation");
+        this.gettranslation(
+          this.form.displayName,
+          "users",
+          this.ur.uid,
+          "displayNameLang"
+        );
+      }
+
+      db.collection("users")
+        .doc(this.ur.uid)
+        .set(
+          {
+            displayName: this.form.displayName,
+            email: this.form.email,
+            phoneNumber: this.form.phoneNumber,
+            formattedNumber: this.form.formattedNumber,
+            opentime: this.form.opentime,
+            closetime: this.form.closetime,
+            opendays: this.form.opendays,
+            servicetype: this.form.servicetype,
+            windowtype: this.form.windowtype,
+            coordinates: this.form.coordinates,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        )
+        .then(() => {
+          this.alertmsg = this.$t("alerts.savecompleted");
+          this.alertcolor = "success";
+          this.showAlert();
+          //Translate Name
+          //this.gettranslation(input, collection, docid, fieldname);
+
+          //servicetype
+          // this.gettranslation(
+          //   this.form.servicetype,
+          //   "users",
+          //   this.ur.uid,
+          //   "servicetypeLang"
+          // );
+          //servicewindows
         });
     },
     updatePasswordconfirmlogin() {
@@ -555,13 +660,55 @@ export default {
                       .doc(docRef.id)
                       .delete();
                   });
-              }, 2500);
+              }, 3000);
             });
           //End Translated error
         });
     },
     // receives a place object via the autocomplete component
+    gettranslation(input, collection, docid, fieldname) {
+      var output = null;
+      db.collection("translations")
+        .add({
+          input: input,
+        })
+        .then((docRef) => {
+          setTimeout(() => {
+            db.collection("translations")
+              .doc(docRef.id)
+              .get()
+              .then((doc) => {
+                output = {
+                  en: this.capitalize_Words(doc.data().translated.en),
+                  "ar-ly": doc.data().translated.ar,
+                };
+                console.log(output);
+              })
+              .then(() => {
+                if (collection && docid && fieldname) {
+                  console.log("writing output to fieldname: ", fieldname);
+                  db.collection(collection)
+                    .doc(docid)
+                    .set(
+                      {
+                        [fieldname]: output,
+                      },
+                      { merge: true }
+                    );
+                }
 
+                //Delete trnalation
+                db.collection("translations")
+                  .doc(docRef.id)
+                  .delete();
+                //return output
+                this.form[fieldname] = output;
+                return output;
+              });
+          }, 3000);
+        });
+      //End Translatation
+    },
     geolocate() {
       //console.log("gettinglocation");
       if (navigator.geolocation) {
@@ -597,6 +744,11 @@ export default {
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
     },
+    capitalize_Words(str) {
+      return str.replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    },
   },
   created() {
     // Object.assign(this.form, this.ur);
@@ -622,6 +774,18 @@ export default {
     }
 
     //Get possible service types
+    db.collection("categories")
+      // .get()
+      .onSnapshot((querySnapshot) => {
+        this.servicetype = [];
+        querySnapshot.forEach((doc) => {
+          this.servicetypes.push(doc.data());
+          // this.servicetypes[doc.id] = doc.data();
+          //this.servicetypes[doc.id].id = doc.id;
+          // console.log(doc.data());
+        });
+      });
+    /*
     db.collection("users").onSnapshot((querySnapshot) => {
       var servicetypes = [
         "مصارف",
@@ -649,7 +813,7 @@ export default {
       //console.log("Current Service Types: ", servicetypes.join(", "));
       this.servicetypes = servicetypes;
     });
-
+    */
     // console.log("copying ur to form");
     /*
     this.displayName = this.ur.displayName;
@@ -696,8 +860,9 @@ export default {
   }
 }
 button {
-  margin: 20px;
+  margin: 0.5em;
   cursor: pointer;
+  font-size: 1em;
 }
 p {
   margin-top: 40px;
@@ -710,7 +875,9 @@ p a {
   text-decoration: underline;
   cursor: pointer;
 }
-
+.v-select {
+  font-size: 20px;
+}
 .logocont {
   display: flex;
   justify-content: center;

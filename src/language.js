@@ -19,6 +19,7 @@ export const messages = {
       map: "Map",
       doneserving: "Finished Serving",
       skipnumber: "Skip Number that was not served",
+      edittranslation: "Edit Translation",
     },
     nav: {
       home: "Home",
@@ -42,6 +43,7 @@ export const messages = {
       distance: "The user distance is {value} meters",
       servicerating: "Service Reviews",
       totalnumbers: "All the numbers in line",
+      pendingnumbers: "Numbers not served yet",
       currentlyserved: "Numbers that are being served",
       mynumberinline: "My Number in Line",
       areyousure: "Are you sure?",
@@ -50,6 +52,9 @@ export const messages = {
         "Your number in line is set for tomorrow because it is now after business hours",
       resetemail: "You will receive an Email to reset password",
       nomorepeople: "No more people in line to serve.",
+      savecompleted: "Save Completed Successfully",
+      estimatedtime: "Estimated waiting time is ",
+      peopleahead: "People before me in line ",
     },
     text: {
       fullname: "Type Your Full Name",
@@ -89,6 +94,7 @@ export const messages = {
       number: "Number:",
       review: "Rating:",
       comment: "Comment:",
+      sponsors: "Sponsors",
     },
     days: {
       6: "Saturday",
@@ -122,6 +128,7 @@ export const messages = {
       map: "الخريطة",
       doneserving: "انهاء العمل",
       skipnumber: "تخطي الرقم لعدم تواجده",
+      edittranslation: "تعديل الترجمة",
     },
     nav: {
       home: "الرئيسية",
@@ -145,6 +152,7 @@ export const messages = {
       distance: "يبعد المستخدم مسافة {value} متر",
       servicerating: "تقييم الخدمات",
       totalnumbers: "الارقام الكلية في الطابور",
+      pendingnumbers: "الارقام التي لم تتم خدمتهم بعد",
       currentlyserved: "الارقام التي يتم خدمتها",
       mynumberinline: "رقمي في الطابور",
       areyousure: "هل انت متأكد؟",
@@ -152,6 +160,9 @@ export const messages = {
       closedtomorrow: "رقمك في الطابور سيكون ليوم الغد لإن ساعات الدوام انتهت",
       resetemail: "تم ارسال بريد الكتروني لتدوين كلمة مرور جديدة",
       nomorepeople: "لا يوجد اشخاص في الطابور",
+      savecompleted: "تم التخزين بنجاح",
+      estimatedtime: "وقت الانتظار التقديري  ",
+      peopleahead: " عدد الاشخاص قبلي في طابور",
     },
     text: {
       fullname: "اسمك الثلاتي",
@@ -191,6 +202,7 @@ export const messages = {
       number: "رقم:",
       review: "التقييم: ",
       comment: "التعليق",
+      sponsors: "برعاية",
     },
     days: {
       6: "السبت",

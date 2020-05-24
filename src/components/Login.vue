@@ -1,7 +1,11 @@
 <template>
   <div>
     <b-container class="container" :dir="dir">
-      <b-overlay :show="loading" rounded="sm">
+      <b-overlay
+        :show="loading"
+        rounded="sm"
+        style="height:100vh;min-height:100vh;widht:100vw;"
+      >
         <b-form v-if="show" @submit="signIN">
           <h3>{{ $t("nav.signin") }}</h3>
 
@@ -148,12 +152,13 @@ export default {
               lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
             });
           this.loginbuttondisabled = true;
-          var redirect = this.$route.query.redirect;
-          if (redirect) {
-            window.location.href = redirect;
-          } else {
-            window.location.href = "/";
-          }
+          //var redirect = this.$route.query.redirect;
+          // if (redirect) {
+          //   window.location.href = redirect;
+          // } else {
+          //   window.location.href = "/";
+          // }
+          this.$router.push({ name: "Dashboard", query: {} });
         })
         .catch((error) => {
           this.loading = false;

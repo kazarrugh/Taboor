@@ -17,7 +17,7 @@
 <script>
 export default {
   name: "QrScan",
-  props: ["ur", "dir", "ta"],
+  props: ["ur", "dir", "ta", "lang"],
   data() {
     return {};
   },

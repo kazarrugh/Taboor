@@ -4,28 +4,28 @@
 
     <b-container
       fluid
-      class="container"
+      class="container cont"
       :dir="dir"
       v-if="!served || afterserved"
+      v-show="provider.active"
     >
       <!-- Start Provider Information -->
-      <ProviderContact
-        :ur="provider"
-        :dir="dir"
-        :ta="ta"
-        style="margin-bottom:30px;"
-      />
+      <ProviderContact :ur="provider" :dir="dir" :ta="ta" :lang="lang" />
       <!-- End Provider Information -->
 
       <!-- Start Get Number-->
-      <b-form @submit="getnumber" v-if="mynumber == null && !afterserved">
+      <b-form
+        class=" cont"
+        @submit="getnumber"
+        v-if="mynumber == null && !afterserved"
+      >
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
           :options="this.provider.windowtype"
           :placeholder="$t('select.typeofserviceneeded')"
           v-model="servicewindow"
           v-on:input="changeservicewindow"
-          style="margin-bottom:30px;"
+          class="cont"
           :dir="dir"
         >
           <template #search="{attributes, events}">
@@ -44,33 +44,61 @@
           variant="outline-primary"
           type="submit"
           size="lg"
+          class="cont"
         >
           {{ $t("buttons.getnumber") }}
         </b-button>
       </b-form>
-
+      <b-spinner v-if="getnumberspinner" class="cont"></b-spinner>
       <!-- End Get Number-->
       <!-- Start Show my numebr -->
-      <b-alert show v-if="mynumber != null" variant="dark" class="bold">
+      <b-alert show v-if="mynumber != null" variant="dark" class="bold cont">
         {{ $t("alerts.mynumberinline") }}
       </b-alert>
+
       <b-card
         v-if="mynumber != null"
         :header="servicewindow"
-        class="mb-2 bigtxt"
+        class="mb-2 bigtxt cont"
       >
         <b-card-text>
-          <!-- <div class="mynumberinline">
-            {{ $t("alerts.mynumberinline") }}
-          </div> -->
-          {{ mynumber }}</b-card-text
-        >
+          <div v-if="peopleahead" class="mynumberinline">
+            {{ $t("alerts.peopleahead") }}
+            {{ servicewindow }}
+            {{ peopleahead }}
+          </div>
+          <h1 class="bold">
+            {{ mynumber }}
+          </h1>
+          <div
+            v-if="
+              timeahead &&
+                timeahead > $moment().format('X') &&
+                servicedate == $moment().format('YYYY-MM-DD')
+            "
+            class="mynumberinline"
+          >
+            <div>Wait time in Seconds {{ this.secondsahead }}</div>
+            {{ $t("alerts.estimatedtime") }}
+            {{ (secondsahead * 1000) | duration("humanize") }}
+          </div>
+        </b-card-text>
         <template v-slot:footer v-if="servicedate">
           {{ servicedate }}
+          <span
+            v-if="
+              timeahead &&
+                timeahead > $moment().format('X') &&
+                servicedate == $moment().format('YYYY-MM-DD')
+            "
+          >
+            - {{ timeahead | moment("h:mm a") }}</span
+          >
         </template>
       </b-card>
       <!-- End Show my numebr -->
       <b-alert
+        class="cont"
         variant="danger"
         :show="dismissCountDown"
         @dismissed="dismissCountDown = 0"
@@ -85,6 +113,7 @@
         v-if="mynumber != null && docid != null"
         variant="outline-danger"
         size="lg"
+        class="cont"
         @click="confirmcancelmodal = true"
       >
         {{ $t("buttons.cancelnumber") }}
@@ -107,6 +136,7 @@
 
       <!-- Start Review -->
       <Review
+        class="cont"
         v-if="afterserved"
         :ur="provider"
         :pk="providerkey"
@@ -119,7 +149,23 @@
       <div v-if="!afterserved">
         <!-- currently served numbers -->
 
+        <PendingNumbers
+          class="cont"
+          :ur="provider"
+          :pk="providerkey"
+          :mynumber="mynumber"
+          :servicewindow="servicewindow"
+          :dir="dir"
+          :ta="ta"
+          :showtime="showtime"
+          :showdate="showdate"
+          @aheadofme="waitingtime"
+        />
+        <!-- end currently served numbers -->
+        <!-- currently served numbers -->
+
         <Display
+          class="cont"
           :ur="provider"
           :pk="providerkey"
           :servicewindow="servicewindow"
@@ -132,6 +178,7 @@
 
         <!-- current total numbers -->
         <TotalNumbers
+          class="cont"
           :ur="provider"
           :pk="providerkey"
           :servicewindow="servicewindow"
@@ -143,6 +190,7 @@
         <!-- end current total numbers -->
         <!-- Start customer reviews -->
         <Reviews
+          class="cont"
           :ur="provider"
           :pk="providerkey"
           :servicewindow="servicewindow"
@@ -156,17 +204,17 @@
       v-if="mywindow != null"
       fluid
       style="height: 60vh;min-height: 60vh;"
-      class="container"
+      class="container cont"
     >
       <!-- Start Provider Information -->
       <ProviderContact :ur="provider" :dir="dir" :ta="ta" />
       <!-- End Provider Information -->
-      <div class="h-100 row align-items-center">
+      <div class="h-100  align-items-center">
         <b-jumbotron
           fluid
           container-fluid
           :header="$t('select.windownumber') + mywindow"
-          style="width:100%;"
+          class="container cont"
         >
           <template v-slot:lead>
             <br />
@@ -185,6 +233,7 @@
 import ProviderContact from "@/components/ProviderContact";
 import Display from "@/components/Display";
 import TotalNumbers from "@/components/TotalNumbers";
+import PendingNumbers from "@/components/PendingNumbers";
 import Review from "@/components/Review";
 import Reviews from "@/components/Reviews";
 
@@ -196,6 +245,7 @@ export default {
     "ur",
     "dir",
     "ta",
+    "lang",
     "showtime",
     "showdate",
     "mynumberprop",
@@ -213,6 +263,7 @@ export default {
       currentlyserving: {},
       servicewindow: null,
       getnumberdisabled: false,
+      getnumberspinner: false,
       confirmcancelmodal: false,
       mynumber: null,
       servicedate: null,
@@ -223,17 +274,32 @@ export default {
       dismissSecs: 5,
       dismissCountDown: 0,
       tomorrowalert: false,
+      secondsahead: null,
+      timeahead: null,
+      peopleahead: null,
     };
   },
   components: {
     ProviderContact,
     Display,
     TotalNumbers,
+    PendingNumbers,
     Review,
     Reviews,
   },
   computed: {
-    ////////////////////////NEEEDS WORK//////////////////
+    singlewaittime() {
+      if (
+        this.provider &&
+        this.provider.time &&
+        this.provider.time[this.servicewindow] &&
+        this.provider.time[this.servicewindow].AvgTime
+      ) {
+        return this.provider.time[this.servicewindow].AvgTime;
+      } else {
+        return 0;
+      }
+    },
     mywindow() {
       if (
         this.mynumber == null ||
@@ -251,21 +317,6 @@ export default {
           return null;
         }
       }
-      // var value = this.mynumber;
-      // if (this.servicewindow != null) {
-      //   var obj = this.provider.currentlyserving[this.servicewindow];
-      // } else {
-      //   obj = this.provider.currentlyserving;
-      // }
-
-      // if (Object.values(obj).includes(value)) {
-      //   this.itsmyturn();
-
-      //   return Object.keys(obj).find((key) => obj[key] === value);
-      // } else {
-      //   return null;
-      // }
-      //return null;
     },
     afterserved() {
       if (this.served && this.mywindow == null) {
@@ -275,13 +326,27 @@ export default {
     },
   },
   methods: {
+    waitingtime(servicewindow, peopleahead) {
+      if (
+        this.mynumber &&
+        this.singlewaittime &&
+        peopleahead &&
+        servicewindow == this.servicewindow
+      ) {
+        this.peopleahead = peopleahead;
+        var nowinseconds = this.$moment().format("X");
+        var timeahead = peopleahead * this.singlewaittime;
+        this.secondsahead = peopleahead * this.singlewaittime;
+        this.timeahead = Math.ceil(Number(nowinseconds) + Number(timeahead));
+      }
+    },
     getcurrentlyserving() {
-      console.log(
-        "currentlyserving pk ",
-        this.providerkey,
-        "date: ",
-        this.showdate
-      );
+      // console.log(
+      //   "currentlyserving pk ",
+      //   this.providerkey,
+      //   "date: ",
+      //   this.showdate
+      // );
       db.collection("currentlyserving")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.showdate)
@@ -325,7 +390,7 @@ export default {
       this.served = true;
     },
     reviewadded(customername, customerphone) {
-      console.log("review added and deleting number");
+      // console.log("review added and deleting number");
       this.mynumber = null;
       this.served = false;
       this.$session.set("clientname", customername);
@@ -352,9 +417,13 @@ export default {
     cancelnumber() {
       db.collection("currentnumber")
         .doc(this.docid)
-        .update({
-          canceled: firebase.firestore.FieldValue.arrayUnion(this.mynumber),
-        })
+        .set(
+          {
+            canceled: firebase.firestore.FieldValue.arrayUnion(this.mynumber),
+            AllupdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        )
         .then(() => {
           this.reviewadded(this.clientname, this.clientphone);
         });
@@ -365,7 +434,7 @@ export default {
         this.docid &&
         this.mynumber
       ) {
-        console.log("update client contact to doc id", this.docid);
+        //console.log("update client contact to doc id", this.docid);
         db.collection("currentnumber")
           .doc(this.docid)
           .set(
@@ -383,20 +452,20 @@ export default {
             { merge: true }
           );
       } else {
-        console.log(
-          "Couldn't add client contact because name:",
-          this.clientname,
-          ", phone:",
-          this.clientphone,
-          ", docid:",
-          this.docid,
-          ", my number:",
-          this.mynumber
-        );
+        // console.log(
+        //   "Couldn't add client contact because name:",
+        //   this.clientname,
+        //   ", phone:",
+        //   this.clientphone,
+        //   ", docid:",
+        //   this.docid,
+        //   ", my number:",
+        //   this.mynumber
+        // );
       }
     },
     addnewnumber() {
-      console.log("adding to Firesetore number", this.mynumber);
+      // console.log("adding to Firesetore number", this.mynumber);
       db.collection("currentnumber")
         .add({
           provider: this.providerkey,
@@ -405,6 +474,7 @@ export default {
           number: this.mynumber,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          AllupdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         })
         .then((doc) => {
           this.docid = doc.id;
@@ -417,12 +487,13 @@ export default {
 
       //Disable Get Number button
       this.getnumberdisabled = true;
+      this.getnumberspinner = true;
 
       //If time now is before the closing time
       var today = this.$moment().format("YYYY-MM-DD");
 
       if (this.provider.closetime) {
-        console.log("provider close time is ", this.provider.closetime);
+        // console.log("provider close time is ", this.provider.closetime);
         //X = Unix timestamp in seconds
         //x = Unix timestamp in milliseconds
         var nowinseconds =
@@ -434,12 +505,12 @@ export default {
         // minutes are worth 60 seconds. Hours are worth 60 minutes.
         var closetimeinseconds = +a[0] * 60 * 60 + +a[1] * 60 + +a[2];
 
-        console.log("close time in seconds ", closetimeinseconds);
-        console.log("time now in seconds ", nowinseconds);
+        // console.log("close time in seconds ", closetimeinseconds);
+        // console.log("time now in seconds ", nowinseconds);
 
         //If time now is after the closing time
         if (nowinseconds > closetimeinseconds) {
-          console.log("The date will be tomorrow because provider is closed");
+          // console.log("The date will be tomorrow because provider is closed");
           today = this.$moment()
             .add(1, "d")
             .format("YYYY-MM-DD");
@@ -457,11 +528,12 @@ export default {
         .where("servicewindow", "==", this.servicewindow)
         .get({ source: "server" })
         .then((querySnapshot) => {
-          console.log("querySnapshot.size is ", querySnapshot.size);
+          // console.log("querySnapshot.size is ", querySnapshot.size);
           if (querySnapshot.size == 0) {
             //In case this is a new date
             this.mynumber = 1;
             this.addnewnumber();
+            this.getnumberspinner = false;
           } else {
             querySnapshot.forEach((doc) => {
               if (doc.data().number) {
@@ -486,22 +558,25 @@ export default {
                       // Note: this could be done without a transaction
                       //       by updating the population using FieldValue.increment()
                       this.mynumber = cnDoc.data().number + 1;
+                      this.getnumberspinner = false;
                       transaction.update(cnDocRef, {
                         number: this.mynumber,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        AllupdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                       });
                     });
                   })
                   .then(() => {
-                    console.log("Transaction successfully committed!");
+                    // console.log("Transaction successfully committed!");
                     this.getnumberfollowup();
                   })
                   .catch((error) => {
                     console.log("Transaction failed: ", error);
                   });
               } else {
-                console.log(doc.id, " doc id Doesnt contain a number");
+                // console.log(doc.id, " doc id Doesnt contain a number");
                 this.mynumber = 1;
+                this.getnumberspinner = false;
                 this.addnewnumber();
               }
             });
@@ -513,6 +588,7 @@ export default {
           this.showAlert();
           //Enable Get Number button
           this.getnumberdisabled = false;
+          this.getnumberspinner = false;
         });
     },
     getnumberfollowup() {
@@ -537,7 +613,7 @@ export default {
       this.$session.set("servicedate", this.servicedate);
       this.$session.set("docid", this.docid);
 
-      //Add client contact
+      //Save Client Contact
       this.addclientcontact();
 
       //Get Location
@@ -558,11 +634,12 @@ export default {
                   //provider: this.providerkey,
                   //ervicedate: this.servicedate,
                   //servicewindow: this.servicewindow,
+
                   clientlocations: { [this.mynumber]: this.mylocation },
                 },
                 { merge: true }
               );
-            console.log("wrote location to firebase doc id", this.docid);
+            // console.log("wrote location to firebase doc id", this.docid);
           }
         });
       } else {
@@ -597,6 +674,14 @@ export default {
           this.getnumberdisabled = true;
         }
       });
+
+    setInterval(() => {
+      if (this.secondsahead > 0) {
+        this.secondsahead = this.secondsahead - 1;
+      } else {
+        this.secondsahead = 0;
+      }
+    }, 1000);
     /*
     this.provider = this.providers[this.providerkey];
     if (this.provider.windowtype && this.provider.windowtype.length > 0) {
@@ -625,13 +710,19 @@ export default {
       //When date changes get numbers of new date
       this.getcurrentlyserving();
     },
+    singlewaittime() {
+      //alert("singlewaittime");
+      if (this.servicewindow && this.peopleahead) {
+        this.waitingtime(this.servicewindow, this.peopleahead);
+      }
+    },
   },
   mounted() {},
 };
 </script>
 
 <style scoped>
-.container {
+.cont {
   margin-top: 30px;
   margin-bottom: 30px;
 }
@@ -646,6 +737,7 @@ export default {
 .mynumberinline {
   font-size: 0.7em;
   padding-bottom: 10px;
+  font-weight: 400;
 }
 .callwindow {
   display: table-cell;

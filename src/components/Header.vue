@@ -25,7 +25,13 @@
           </b-nav-item>
 
           <b-nav-item v-if="loggedin && !disablerouter" to="/profile">
-            {{ ur.displayName }}
+            <!-- {{ ur.displayName }} -->
+            <span v-if="ur.displayNameLang && ur.displayNameLang[lang]">
+              {{ ur.displayNameLang[lang] }}
+            </span>
+            <span v-else>
+              {{ ur.displayName }}
+            </span>
           </b-nav-item>
           <b-nav-item v-if="!loggedin && !disablerouter" to="/Signup">
             {{ $t("nav.newbranch") }}

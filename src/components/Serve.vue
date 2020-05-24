@@ -1,11 +1,11 @@
 <template>
-  <b-container class="container" :dir="dir">
-    <div>
+  <div>
+    <b-container fluid class="container cont" :dir="dir">
       <!-- Start Provider Information -->
-      <ProviderContact :ur="provider" :dir="dir" :ta="ta" />
+      <ProviderContact :ur="provider" :dir="dir" :ta="ta" :lang="lang" />
       <!-- End Provider Information -->
 
-      <b-form @submit="servenumber">
+      <b-form @submit="servenumber" class=" cont">
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
           :disabled="disabledserviceandwindow"
@@ -13,6 +13,7 @@
           :placeholder="$t('select.typeofservice')"
           v-model="servicewindow"
           :dir="dir"
+          class="cont"
         >
           <template #search="{attributes, events}">
             <input
@@ -23,7 +24,7 @@
             />
           </template>
         </v-select>
-        <br /><br />
+
         <v-select
           :options="totalwindows"
           :reduce="(option) => option.value"
@@ -31,6 +32,7 @@
           :placeholder="$t('select.windownumberselect')"
           v-model="mywindow"
           :dir="dir"
+          class="cont"
         >
           <template #search="{attributes, events}">
             <input
@@ -42,22 +44,27 @@
           </template>
         </v-select>
 
-        <br /><br />
         <b-button
           block
           :disabled="!mywindow || !nextnumber"
           variant="outline-primary"
           type="submit"
           size="lg"
+          class="cont"
         >
-          {{ $t("buttons.nextnumber") }}
+          <span v-if="this.nextnumber">
+            {{ $t("buttons.nextnumber") + ": " + this.nextnumber }}
+          </span>
+          <span v-else>
+            {{ $t("buttons.nextnumber") }}
+          </span>
         </b-button>
-
+        <!-- 
         {{ "Maxnumber: " + this.maxnumber }}
         ----
         {{ "Next Number: " + this.nextnumber }}
+         -->
         <div v-if="servingnumber">
-          <br /><br />
           <b-alert variant="primary" show>
             <h1>{{ $t("alerts.currentnumber", { value: servingnumber }) }}</h1>
 
@@ -88,6 +95,7 @@
             variant="outline-danger"
             size="lg"
             @click="skipnumber"
+            class="cont"
           >
             {{ $t("buttons.skipnumber") }}
           </b-button>
@@ -98,15 +106,27 @@
             variant="outline-danger"
             size="lg"
             @click="doneserving"
+            class="cont"
           >
             {{ $t("buttons.doneserving") }}
           </b-button>
         </div>
       </b-form>
 
+      <PendingNumbers
+        class="cont"
+        :ur="provider"
+        :pk="providerkey"
+        :servicewindow="servicewindow"
+        :dir="dir"
+        :ta="ta"
+        :showtime="showtime"
+        :showdate="showdate"
+      />
       <!-- currently served numbers -->
 
       <Display
+        class="cont"
         :ur="provider"
         :pk="providerkey"
         :servicewindow="servicewindow"
@@ -119,6 +139,7 @@
       <!-- current total numbers -->
 
       <TotalNumbers
+        class="cont"
         :ur="provider"
         :pk="providerkey"
         :servicewindow="servicewindow"
@@ -130,6 +151,7 @@
       <!-- end current total numbers -->
       <!-- Start customer reviews -->
       <Reviews
+        class="cont"
         :ur="provider"
         :pk="providerkey"
         :servicewindow="servicewindow"
@@ -138,14 +160,15 @@
       />
 
       <!-- End customer reviews -->
-    </div>
-  </b-container>
+    </b-container>
+  </div>
 </template>
 
 <script>
 import ProviderContact from "@/components/ProviderContact";
 import Display from "@/components/Display";
 import TotalNumbers from "@/components/TotalNumbers";
+import PendingNumbers from "@/components/PendingNumbers";
 import getDistance from "geolib/es/getDistance";
 import Reviews from "@/components/Reviews";
 
@@ -153,7 +176,7 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "Serve",
-  props: ["ur", "dir", "ta", "providers", "showtime", "showdate"],
+  props: ["ur", "dir", "ta", "providers", "lang", "showtime", "showdate"],
   data() {
     return {
       servicedate: null,
@@ -179,6 +202,7 @@ export default {
     Display,
     Reviews,
     TotalNumbers,
+    PendingNumbers,
   },
   computed: {
     disabledserviceandwindow() {
@@ -253,7 +277,7 @@ export default {
       //WE HAVE TO MAKE SURE THAT SOMEONE IS IN LINE BEFORE SERVING THEM
       if (this.maxnumber) {
         this.servingnumber = 1;
-        console.log("adding servingnumber 1 ", this.servingnumber);
+        // console.log("adding servingnumber 1 ", this.servingnumber);
 
         db.collection("currentlyserving")
           .add({
@@ -281,22 +305,21 @@ export default {
                 },
                 { merge: true }
               );
-            console.log(
-              "Delted time for user ",
-              this.providerkey,
-              " service ",
-              this.servicewindow
-            );
+            // console.log(
+            //   "Delted time for user ",
+            //   this.providerkey,
+            //   " service ",
+            //   this.servicewindow
+            // );
           });
       } else {
-        console.log("Not adding to firestore because maxnumber is null!");
+        // console.log("Not adding to firestore because maxnumber is null!");
       }
     },
     skipnumber() {
-      //NEEDS WORK
       //Clicked if someone is not served
 
-      console.log("skipping number");
+      // console.log("skipping number");
       if (this.nextnumber) {
         this.servenumber("skipnumber");
       } else {
@@ -306,7 +329,6 @@ export default {
       //Clean up number happens in servenumber
     },
     doneserving() {
-      //NEEDS WORK
       //In case all people in line are served, including the people currently served
 
       //Save Service time of last service
@@ -314,17 +336,11 @@ export default {
       this.cleanupnumber();
     },
     saveservicetime(timer, providerkey, servicewindow) {
-      console.log("Saving Service Time");
+      // console.log("Saving Service Time");
       if (timer) {
         var t = timer.split(":");
         var servicetimeinseconds = +t[0] * 60 * 60 + +t[1] * 60 + +t[2];
-        // Commit to Firestore
-        // db.collection("users")
-        //   .doc(this.pk)
-        //   .update({
-        //     numRatings: newNumRatings,
-        //     avgRating: newAvgRating,
-        //   });
+
         var timerDocRef = db.collection("users").doc(providerkey);
         return db
           .runTransaction((transaction) => {
@@ -342,14 +358,14 @@ export default {
 
                 var NumTimes = timerDoc.data().time[servicewindow].NumTimes;
 
-                console.log(
-                  "servicetimeinseconds",
-                  servicetimeinseconds,
-                  "AvgTime: ",
-                  AvgTime,
-                  "NumTimes: ",
-                  NumTimes
-                );
+                // console.log(
+                //   "servicetimeinseconds",
+                //   servicetimeinseconds,
+                //   "AvgTime: ",
+                //   AvgTime,
+                //   "NumTimes: ",
+                //   NumTimes
+                // );
 
                 // Compute new average rating
                 var oldAvgTime = AvgTime * NumTimes;
@@ -359,14 +375,14 @@ export default {
                 var newAvgTime =
                   (oldAvgTime + servicetimeinseconds) / newNumTimes;
 
-                console.log(
-                  "newNumTimes: ",
-                  newNumTimes,
-                  "oldAvgTime: ",
-                  oldAvgTime,
-                  "newAvgTime: ",
-                  newAvgTime
-                );
+                // console.log(
+                //   "newNumTimes: ",
+                //   newNumTimes,
+                //   "oldAvgTime: ",
+                //   oldAvgTime,
+                //   "newAvgTime: ",
+                //   newAvgTime
+                // );
               } else {
                 newNumTimes = 1;
                 newAvgTime = servicetimeinseconds;
@@ -379,30 +395,30 @@ export default {
                   AvgTime: newAvgTime,
                 },
               };
-              console.log("saving time obj", timeobj);
+              // console.log("saving time obj", timeobj);
               transaction.set(timerDocRef, { time: timeobj }, { merge: true });
             });
           })
           .then(() => {
-            console.log("Save Time Transaction successfully committed!");
+            // console.log("Save Time Transaction successfully committed!");
           })
           .catch((error) => {
             console.log("Save Time Transaction failed: ", error);
           });
       } else {
-        console.log("there was no timer to save");
+        // console.log("there was no timer to save");
       }
     },
     cleanupnumber() {
-      console.log("cleaning up number", this.servingnumber);
+      // console.log("cleaning up number", this.servingnumber);
       //Delete the number from currentlysering inservice object
       if (this.docid) {
-        console.log(
-          "deleting number from inservice window",
-          this.mywindow,
-          "docid",
-          this.docid
-        );
+        // console.log(
+        //   "deleting number from inservice window",
+        //   this.mywindow,
+        //   "docid",
+        //   this.docid
+        // );
         db.collection("currentlyserving")
           .doc(this.docid)
           .set(
@@ -448,7 +464,7 @@ export default {
         .where("servicewindow", "==", this.servicewindow)
         .get({ source: "server" })
         .then((querySnapshot) => {
-          console.log("querySnapshot.size is ", querySnapshot.size);
+          // console.log("querySnapshot.size is ", querySnapshot.size);
           if (querySnapshot.size == 0) {
             //In case this is a new date
             this.addnewnumber();
@@ -471,10 +487,10 @@ export default {
                       }
 
                       var servingnumber = snDoc.data().servingnumber + 1;
-                      console.log(
-                        "servingnumber before checking canceled",
-                        servingnumber
-                      );
+                      // console.log(
+                      //   "servingnumber before checking canceled",
+                      //   servingnumber
+                      // );
 
                       //Check if serving number is not in the canceled numbers
                       if (
@@ -486,10 +502,10 @@ export default {
                         }
                       }
 
-                      console.log(
-                        "servingnumber before transaction",
-                        servingnumber
-                      );
+                      // console.log(
+                      //   "servingnumber before transaction",
+                      //   servingnumber
+                      // );
                       if (servingnumber <= this.maxnumber) {
                         transaction.set(
                           snDocRef,
@@ -509,7 +525,7 @@ export default {
                     });
                   })
                   .then((servingnumber) => {
-                    console.log("Transaction servingnumber:", servingnumber);
+                    // console.log("Transaction servingnumber:", servingnumber);
                     this.servingnumber = servingnumber;
                     this.servenumberfollowup();
                   })
@@ -521,7 +537,7 @@ export default {
                     }
                   });
               } else {
-                console.log(doc.id, " doc id Doesnt contain a serving number");
+                // console.log(doc.id, " doc id Doesnt contain a serving number");
                 this.addnewnumber();
               }
             });
@@ -603,12 +619,12 @@ export default {
     },
 
     getcurrentnumbers() {
-      console.log(
-        "getting numbers pk ",
-        this.providerkey,
-        "date: ",
-        this.servicedate
-      );
+      // console.log(
+      //   "getting numbers pk ",
+      //   this.providerkey,
+      //   "date: ",
+      //   this.servicedate
+      // );
       db.collection("currentnumber")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.servicedate)
@@ -617,17 +633,17 @@ export default {
           snapshot.forEach((doc) => {
             this.currentnumber[doc.data().servicewindow] = doc.data();
             this.currentnumber[doc.data().servicewindow].id = doc.id;
-            console.log(doc.id);
+            // console.log(doc.id);
           });
         });
     },
     getcurrentlyserving() {
-      console.log(
-        "currentlyserving pk ",
-        this.providerkey,
-        "date: ",
-        this.servicedate
-      );
+      // console.log(
+      //   "currentlyserving pk ",
+      //   this.providerkey,
+      //   "date: ",
+      //   this.servicedate
+      // );
       db.collection("currentlyserving")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.servicedate)
@@ -677,7 +693,7 @@ export default {
 
     //Get today's date
     this.servicedate = this.$moment().format("YYYY-MM-DD");
-    console.log("servicedate", this.servicedate);
+    // console.log("servicedate", this.servicedate);
     this.startTimestamp = this.$moment().startOf("day");
     this.startTimer();
     this.getcurrentnumbers();
@@ -708,9 +724,16 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  margin-top: 40px;
-  margin-bottom: 40px;
+.cont {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+@media only screen and (max-width: 400px) {
+  /* .container { */
+  /* margin: 10px; */
+  /* padding: 10px; */
+  /* } */
 }
 
 .v-select {

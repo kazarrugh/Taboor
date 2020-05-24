@@ -1,6 +1,6 @@
 <template>
-  <b-container class="container" :dir="dir">
-    <div class="margin-bottom">
+  <b-container class="cont" :dir="dir">
+    <div>
       <b-button
         block
         variant="outline-dark"
@@ -24,11 +24,11 @@
     </div>
     <b-overlay :show="loading" rounded="sm">
       <div v-for="(type, index) in uniqueservicetypes" v-bind:key="index">
-        <b-alert show variant="dark" class="margin-bottom">
+        <b-alert show variant="dark" class="cont">
           <h4 class="servicetype-title">{{ type }}</h4>
         </b-alert>
 
-        <VueSlickCarousel v-bind="carousel" class="margin-bottom">
+        <VueSlickCarousel v-bind="carousel" class="cont">
           <!-- <h2>1</h2>
           <h2>2</h2>
           <h2>3</h2>
@@ -38,7 +38,12 @@
               <b-card-header @click="viewprovider(pro.id)">
                 <b-icon-house-door-fill v-if="pro.opennow == true" />
                 <b-icon-house-fill v-if="pro.opennow == false" />
-                {{ pro.displayName }}
+                <span v-if="pro.displayNameLang && pro.displayNameLang[lang]">
+                  {{ pro.displayNameLang[lang] }}
+                </span>
+                <span v-else>
+                  {{ pro.displayName }}
+                </span>
               </b-card-header>
               <b-list-group flush>
                 <b-list-group-item @click="viewprovider(pro.id)">
@@ -91,6 +96,11 @@
         </VueSlickCarousel>
       </div>
       <!-- <div dir="ltr">{{ this.time }}</div> -->
+      <Adsense
+        data-ad-client="ca-pub-8323299523569993"
+        ata-ad-slot="1234567890"
+      >
+      </Adsense>
     </b-overlay>
   </b-container>
 </template>
@@ -106,7 +116,7 @@ import "vue-slick-carousel/dist/vue-slick-carousel-theme.css";
 
 export default {
   name: "Dashboard",
-  props: ["dir", "ta", "ur", "providers", "time"],
+  props: ["dir", "ta", "ur", "providers", "time", "lang"],
   data() {
     return {
       loading: false,
@@ -163,7 +173,9 @@ export default {
     providerbycat() {
       return (type) =>
         // Object.values(this.providers).filter(m => m.servicetype === type);
-        this.providerbygeopoint.filter((m) => m.servicetype === type);
+        this.providerbygeopoint.filter(
+          (m) => m.servicetype[this.lang] === type
+        );
     },
     providerbygeopoint() {
       var filtered = Object.values(this.providers).filter(
@@ -171,6 +183,7 @@ export default {
       );
       filtered = filtered.filter((m) => m.logo !== null);
       filtered = filtered.filter((m) => m.phoneNumber !== null);
+      filtered = filtered.filter((m) => m.active === true);
 
       if (
         this.mylocation != null &&
@@ -185,7 +198,9 @@ export default {
       }
     },
     uniqueservicetypes() {
-      const servicetypes = this.providerbygeopoint.map((a) => a.servicetype);
+      const servicetypes = this.providerbygeopoint.map(
+        (a) => a.servicetype[this.lang]
+      );
       return [...new Set(servicetypes)];
     },
   },
@@ -216,13 +231,11 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  margin-top: 40px;
-  margin-bottom: 40px;
+.cont {
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
-.margin-bottom {
-  margin-bottom: 40px;
-}
+
 .servicetype-title {
   margin: 0px;
 }

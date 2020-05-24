@@ -75,6 +75,11 @@ Vue.use(VueGoogleMaps, {
 import { GmapMarker } from "vue2-google-maps/src/components/marker";
 Vue.component("GmapMarker", GmapMarker);
 
+//Google Adsense
+import Adsense from "vue-google-adsense/dist/Adsense.min.js";
+Vue.use(require("vue-script2"));
+Vue.use(Adsense);
+
 import VueI18n from "vue-i18n";
 Vue.use(VueI18n);
 

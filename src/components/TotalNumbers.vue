@@ -1,39 +1,39 @@
 <template>
   <div>
-    <b-container class="container" :dir="dir">
-      <!-- {{ currentnumber }} -->
-      <div v-if="this.currentnumber && currentnumbersize > 0">
-        <b-alert show variant="dark" class="bold">
-          {{ $t("alerts.totalnumbers") }}
-        </b-alert>
-        <!-- v-if="servicewindow == null" -->
-        <b-row fluid>
-          <b-col
-            v-for="(cn, label) in currentnumber"
-            v-bind:key="label"
-            :cols="cols"
-            :md="md"
+    <!-- <b-container class="container" :dir="dir"> -->
+    <!-- {{ currentnumber }} -->
+    <div v-if="this.currentnumber && currentnumbersize > 0">
+      <b-alert show variant="dark" class="bold">
+        {{ $t("alerts.totalnumbers") }}
+      </b-alert>
+      <!-- v-if="servicewindow == null" -->
+      <b-row fluid>
+        <b-col
+          v-for="(cn, label) in currentnumber"
+          v-bind:key="label"
+          :cols="cols"
+          :md="md"
+        >
+          <b-card
+            v-if="servicewindow == null || servicewindow == cn.servicewindow"
+            :header="cn.servicewindow"
+            class="mb-2"
+            :id="label"
           >
-            <b-card
-              v-if="servicewindow == null || servicewindow == cn.servicewindow"
-              :header="cn.servicewindow"
-              class="mb-2"
-              :id="label"
-            >
-              <b-card-text class="bold"> <number :to="cn.number"/></b-card-text>
-              <template v-slot:footer v-if="cn.updatedAt">
-                {{ $t("text.lastupdated") }}
-                {{ cn.updatedAt.seconds | moment("from") }}
-              </template>
-            </b-card>
-          </b-col>
-        </b-row>
-      </div>
-      <!-- end currently served numbers -->
-      <div style="display:none;">
-        {{ showtime }}
-      </div>
-    </b-container>
+            <b-card-text class="bold"> <number :to="cn.number"/></b-card-text>
+            <template v-slot:footer v-if="cn.updatedAt">
+              {{ $t("text.lastupdated") }}
+              {{ cn.updatedAt.seconds | moment("from") }}
+            </template>
+          </b-card>
+        </b-col>
+      </b-row>
+    </div>
+    <!-- end currently served numbers -->
+    <div style="display:none;">
+      {{ showtime }}
+    </div>
+    <!-- </b-container> -->
   </div>
 </template>
 
@@ -90,7 +90,7 @@ export default {
       }, 3000);
     },
     getcurrentnumbers() {
-      console.log("getting numbers with date ", this.servicedate);
+      //console.log("getting numbers with date ", this.servicedate);
       // Start Listen for snapshot
       db.collection("currentnumber")
         .where("provider", "==", this.pk)
@@ -102,8 +102,8 @@ export default {
             //   console.log("New: ", change.doc.data());
             // }
             if (change.type === "modified") {
-              console.log("Modified ERROR: ", change.doc.data());
-              console.log("Modified Number: ", change.doc.data().number);
+              // console.log("Modified ERROR: ", change.doc.data());
+              // console.log("Modified Number: ", change.doc.data().number);
 
               if (
                 change.doc.data().number &&
@@ -113,13 +113,13 @@ export default {
                 change.doc.data().number !=
                   this.lastcurrentnumber[change.doc.id].number
               ) {
-                console.log("Modified: ", change.doc.id);
+                // console.log("Modified: ", change.doc.id);
 
-                console.log(
-                  "old number: ",
-                  this.lastcurrentnumber[change.doc.id].number
-                );
-                console.log("channged number: ", change.doc.data().number);
+                // console.log(
+                //   "old number: ",
+                //   this.lastcurrentnumber[change.doc.id].number
+                // );
+                //console.log("channged number: ", change.doc.data().number);
 
                 this.updatednumber(change.doc.id);
               }
@@ -136,7 +136,7 @@ export default {
           this.currentnumber = {};
           this.currentnumbersize = 0;
           snapshot.forEach((doc) => {
-            console.log("setting current number with new data");
+            //console.log("setting current number with new data");
             this.currentnumber[doc.id] = doc.data();
             this.currentnumber[doc.id].id = doc.id;
             this.currentnumbersize++;
@@ -157,8 +157,8 @@ export default {
 
 <style scoped>
 .container {
-  margin-top: 40px;
-  padding: 0px;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 .card-alert {
   /* background-color: #e74c3c; */

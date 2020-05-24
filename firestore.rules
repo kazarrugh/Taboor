@@ -5,9 +5,13 @@ service cloud.firestore {
     match /reviews/{review} {
         allow read, write;
     }
+    match /sponsors/{sp} {
+        allow read;
+        allow update,write: if request.auth.uid != null;
+    }
     match /users/{user} {
-        allow read,update;
-        allow write: if request.auth.uid != null;
+        allow read;
+        allow update,write: if request.auth.uid != null;
     }
     match /translations/{t} {
         allow read,update,write;
@@ -15,13 +19,10 @@ service cloud.firestore {
     match /currentnumber/{cn} {
         allow read,update,write;
     }
-    match /clientlocations/{cl} {
-        allow read,update,write;
-    }
-    match /clientcontacts/{cc} {
-        allow read,update,write;
-    }
     match /currentlyserving/{cs} {
+        allow read,update,write;
+    }
+    match /categories/{cat} {
         allow read,update,write;
     }
     // match /{document=**} {

@@ -45,11 +45,7 @@
     <div id="recaptcha"></div>
   </div>
 </template>
-<script
-  data-ad-client="ca-pub-8323299523569993"
-  async
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
-></script>
+
 <script>
 document.title = "Taboor";
 
@@ -221,6 +217,7 @@ export default {
       // var workingdays = [1, 2, 3, 4, 5, 6, 7]; //5 Thursday and 6 Friday
       //console.log(this.$moment().isoWeekday());
       db.collection("users")
+        .where("active", "==", true)
         .orderBy("servicetype")
         .onSnapshot((querySnapshot) => {
           this.providers = {};
@@ -505,6 +502,10 @@ export default {
 @media print {
   button {
     display: none !important;
+  }
+  .rv {
+    padding-top: 0px;
+    padding-bottom: 0px;
   }
 }
 </style>
