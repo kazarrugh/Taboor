@@ -331,8 +331,16 @@ export default {
           .doc(user.uid)
           .onSnapshot(
             (doc) => {
-              this.CurrentUserRoles = doc.data();
-              this.CurrentUserRoles.uid = user.uid;
+              // console.log("user.uid", user.uid);
+              // console.log("CurrentUserRoles", this.CurrentUserRoles);
+              // console.log("doc.data()", doc.data());
+
+              if (doc.data()) {
+                this.CurrentUserRoles = doc.data();
+              }
+              if (user.uid) {
+                this.CurrentUserRoles.uid = user.uid;
+              }
               //this.loadcompleted = true;
             },
             function(error) {
@@ -341,6 +349,17 @@ export default {
           );
       } else {
         //For Public
+        var allowedpages = [
+          "Dashboard",
+          "Provider",
+          "Login",
+          "Signup",
+          "QrScan",
+        ];
+
+        if (!allowedpages.includes(this.$router.currentRoute.name)) {
+          this.$router.push({ name: "Dashboard", query: {} });
+        }
         this.loadcompleted = true;
       }
     });

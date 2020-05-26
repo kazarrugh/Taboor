@@ -36,14 +36,22 @@
           <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
             <b-card>
               <b-card-header @click="viewprovider(pro.id)">
-                <b-icon-house-door-fill v-if="pro.opennow == true" />
-                <b-icon-house-fill v-if="pro.opennow == false" />
-                <span v-if="pro.displayNameLang && pro.displayNameLang[lang]">
-                  {{ pro.displayNameLang[lang] }}
-                </span>
-                <span v-else>
-                  {{ pro.displayName }}
-                </span>
+                <b-row>
+                  <b-col cols="1" v-if="pro.opennow != null">
+                    <b-icon-house-door-fill v-if="pro.opennow == true" />
+                    <b-icon-house-fill v-if="pro.opennow == false" />
+                  </b-col>
+                  <b-col>
+                    <span
+                      v-if="pro.displayNameLang && pro.displayNameLang[lang]"
+                    >
+                      {{ pro.displayNameLang[lang] }}
+                    </span>
+                    <span v-else>
+                      {{ pro.displayName }}
+                    </span>
+                  </b-col>
+                </b-row>
               </b-card-header>
               <b-list-group flush>
                 <b-list-group-item @click="viewprovider(pro.id)">
@@ -129,7 +137,7 @@ export default {
         focusOnSelect: false,
         infinite: true,
         speed: 500,
-        autoplay: false,
+        autoplay: true,
         autoplaySpeed: 4000,
         slidesToShow: 4,
         slidesToScroll: 1,
@@ -137,29 +145,29 @@ export default {
         swipeToSlide: true,
         draggable: true,
         touchMove: true,
+        touchThreshold: 5,
         responsive: [
           {
             breakpoint: 1024,
             settings: {
+              touchThreshold: 4,
               slidesToShow: 3,
               slidesToScroll: 3,
-              infinite: true,
-              dots: true,
             },
           },
           {
             breakpoint: 600,
             settings: {
+              touchThreshold: 3,
               slidesToShow: 2,
               slidesToScroll: 2,
-              initialSlide: 2,
             },
           },
           {
             breakpoint: 480,
             settings: {
               arrows: false,
-              touchThreshold: 3,
+              touchThreshold: 2,
               slidesToShow: 1,
               slidesToScroll: 1,
             },
@@ -262,7 +270,7 @@ export default {
 }
 .card-header {
   cursor: pointer;
-  font-size: 1.3em;
+  font-size: 1.2em;
 }
 .card-body {
   padding: 0px;

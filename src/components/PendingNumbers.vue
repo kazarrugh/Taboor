@@ -1,10 +1,12 @@
 <template>
-  <div>
+  <div :dir="dir">
     <!-- <b-container class="container" :dir="dir"> -->
-    <!-- diff {{ diff }} -->
+    {{ diff }}
     <div v-if="this.pendingnumberssize > 0">
-      <b-alert show variant="dark" class="bold">
-        {{ $t("alerts.pendingnumbers") }}
+      <b-alert show variant="dark">
+        <h4>
+          {{ $t("alerts.pendingnumbers") }}
+        </h4>
       </b-alert>
       <!-- v-if="servicewindow == null" -->
       <b-row fluid>
@@ -16,10 +18,21 @@
         >
           <b-card
             v-if="servicewindow == null || servicewindow == cn.servicewindow"
-            :header="cn.servicewindow"
             class="mb-2"
             :id="label"
           >
+            <template v-slot:header v-if="cn.servicewindow">
+              <span
+                v-if="
+                  ur.windowtypeLang &&
+                    ur.windowtypeLang[cn.servicewindow] &&
+                    ur.windowtypeLang[cn.servicewindow][lang]
+                "
+              >
+                {{ ur.windowtypeLang[cn.servicewindow][lang] }}
+              </span>
+              <span v-else>{{ cn.servicewindow }}</span>
+            </template>
             <b-card-text class="bold"> <number :to="cn.number"/></b-card-text>
             <template v-slot:footer v-if="cn.updatedAt">
               {{ $t("text.lastupdated") }}
@@ -51,12 +64,15 @@ export default {
     "ta",
     "showtime",
     "showdate",
+    "lang",
   ],
   data() {
     return {
       currentnumber: {},
       currentlyserving: {},
       lastpendingnumbers: {},
+      currentnumberloaded: false,
+      currentlyservingloaded: false,
       //   pendingnumberssize: 1,
       diff: null,
     };
@@ -123,7 +139,8 @@ export default {
 
           var pendinginline = cn.number - numcancled - sn;
           if (this.mynumber) {
-            var peopleahead = this.mynumber - numcancled - sn;
+            var peopleahead = this.mynumber - numcancled - sn - 1;
+            if (peopleahead < 0) peopleahead = 0;
           }
 
           if (pendinginline > 0) {
@@ -134,6 +151,7 @@ export default {
             pendingnumbers[cn.id].updatedAt = updatedAt;
           }
         }
+        //pendingnumbers = { odf: "333" };
       });
       return pendingnumbers;
     },
@@ -148,6 +166,7 @@ export default {
       this.getcurrentlyserving();
     },
     pendingnumbers() {
+      // console.log("pendingnumbers watch");
       // if (
       //   this.lastpendingnumbers &&
       //   this.lastpendingnumbers[cn.id] &&
@@ -166,13 +185,25 @@ export default {
         };
       }, {});
 
-      if (diff && Object.keys(diff) > 0) {
+      if (
+        diff &&
+        Object.keys(diff) &&
+        Object.keys(diff)[0] &&
+        Object.keys(diff)[0].length > 0
+      ) {
+        // console.log(this.lastpendingnumbers);
+        // if (Object.keys(this.lastpendingnumbers).length != 0) {
+        // if (this.currentnumberloaded && this.currentlyservingloaded) {
+        //No color change on first load
+        // console.log("color");
         var key = Object.keys(diff)[0];
         this.updatednumber(key);
+        // }
+
         var servicewindow = Object.values(diff)[0].servicewindow;
         var peopleahead = Object.values(diff)[0].peopleahead;
         this.$emit("aheadofme", servicewindow, peopleahead);
-        this.diff = { [servicewindow]: peopleahead };
+        //this.diff = Object.values(diff)[0]; //for debug only
       }
 
       this.lastpendingnumbers = this.pendingnumbers;
@@ -197,6 +228,7 @@ export default {
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
           this.currentnumber = {};
+          var l = 0;
           snapshot.forEach((doc) => {
             // console.log("setting current number with new data");
             //this.currentnumber[doc.id] = doc.data();
@@ -214,6 +246,8 @@ export default {
               }
               this.currentnumber[doc.data().servicewindow] = obj;
             }
+            l++;
+            if (l == snapshot.size) this.currentnumberloaded = true;
           });
         });
     },
@@ -223,6 +257,7 @@ export default {
         .where("provider", "==", this.pk)
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
+          var l = 0;
           this.currentlyserving = {};
           snapshot.forEach((doc) => {
             // console.log("setting current number with new data");
@@ -236,6 +271,8 @@ export default {
               this.currentlyserving[doc.data().servicewindow] = obj;
             }
           });
+          l++;
+          if (l == snapshot.size) this.currentlyservingloaded = true;
         });
     },
   },

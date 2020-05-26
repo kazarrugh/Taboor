@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <!-- <b-container :dir="dir"> -->
+  <div :dir="dir">
+    <!-- <b-container > -->
     <b-row>
       <b-col style="display: flex;" v-if="this.provider.displayName">
         <div class="providerinfo">

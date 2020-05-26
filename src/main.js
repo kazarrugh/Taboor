@@ -41,6 +41,11 @@ import VueQrcodeReader from "vue-qrcode-reader";
 Vue.use(VueQrcodeReader);
 
 import VueSessionStorage from "vue-sessionstorage";
+// var options = {
+//   persist: true,
+// };
+
+// Vue.use(VueSessionStorage, options);
 Vue.use(VueSessionStorage);
 
 import VueNumber from "vue-number-animation";

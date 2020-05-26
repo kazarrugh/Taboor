@@ -7,11 +7,13 @@
       <div>
         <v-select
           v-if="ur.windowtype && ur.windowtype.length > 1"
-          :options="this.ur.windowtype"
+          :options="translatedwindowtype"
           :placeholder="$t('select.typeofservice')"
           v-model="servicewindow"
           :dir="dir"
           class="cont"
+          :searchable="false"
+          :reduce="(option) => option.value"
         >
         </v-select>
 
@@ -22,6 +24,7 @@
           v-model="mywindow"
           :dir="dir"
           class="cont"
+          :searchable="false"
         >
         </v-select>
 
@@ -77,8 +80,9 @@
       </b-row> -->
       <img src="../assets/logo.png" width="300" />
       <!-- add sponsors -->
+      <Sponsors />
       <!-- -->
-      <b-row v-if="Object.keys(sponsors).length > 0">
+      <!-- <b-row v-if="Object.keys(sponsors).length > 0">
         <b-col cols="12" style="font-size:2em">
           <hr />
           {{ $t("labels.sponsors") }}
@@ -91,15 +95,16 @@
         >
           <img v-if="sp.logo" :src="sp.logo" width="150" />
         </b-col>
-      </b-row>
+      </b-row> -->
     </b-container>
   </div>
 </template>
 
 <script>
-import firebase from "../firebaseConfig.js";
-const db = firebase.firestore();
+// import firebase from "../firebaseConfig.js";
+// const db = firebase.firestore();
 import ProviderContact from "@/components/ProviderContact";
+import Sponsors from "@/components/Sponsors";
 import QrcodeVue from "qrcode.vue";
 export default {
   name: "QrPaper",
@@ -114,13 +119,33 @@ export default {
   components: {
     ProviderContact,
     QrcodeVue,
+    Sponsors,
   },
   computed: {
+    translatedwindowtype() {
+      var twtAr = [];
+      this.ur.windowtype.forEach((twt) => {
+        if (
+          this.ur.windowtypeLang &&
+          this.ur.windowtypeLang[twt] &&
+          this.ur.windowtypeLang[twt][this.lang]
+        ) {
+          twtAr.push({
+            label: this.ur.windowtypeLang[twt][this.lang],
+            value: twt,
+          });
+        } else {
+          twtAr.push({ label: twt, value: twt });
+        }
+      });
+
+      return twtAr;
+    },
     qrpath() {
       return window.location.origin + "/provider?key=" + this.ur.uid;
     },
     qrsize() {
-      return window.innerWidth * 0.5;
+      return window.innerWidth * 0.48;
     },
     totalwindows() {
       var tw = [];
@@ -138,15 +163,15 @@ export default {
   },
   beforeCreate() {},
   created() {
-    db.collection("sponsors")
-      .where("active", "==", true)
-      .onSnapshot((snapshot) => {
-        this.sponsors = {};
-        snapshot.forEach((doc) => {
-          this.sponsors[doc.id] = doc.data();
-          this.sponsors[doc.id].id = doc.id;
-        });
-      });
+    // db.collection("sponsors")
+    //   .where("active", "==", true)
+    //   .onSnapshot((snapshot) => {
+    //     this.sponsors = {};
+    //     snapshot.forEach((doc) => {
+    //       this.sponsors[doc.id] = doc.data();
+    //       this.sponsors[doc.id].id = doc.id;
+    //     });
+    //   });
   },
   mounted() {},
 };
@@ -161,20 +186,29 @@ export default {
   font-size: 20px;
   text-align: center;
 }
+/* bigtext is used to print service type and window number */
+.bigtext {
+  font-size: 5em;
+  margin: 5vw;
+}
 @media print {
   .v-select {
     display: none;
+  }
+  .cuthead {
+    margin-top: -2px;
+  }
+  .bigtext {
+    font-size: 10vw;
+    margin: 8vw;
+    margin-bottom: 10vw;
   }
 }
 .border {
   border: 5px;
   border-style: solid;
 }
-.bigtext {
-  font-size: 8vw;
-  margin: 4vw;
-  margin-bottom: 8vw;
-}
+
 .printlabel {
   margin-bottom: 8vw;
 }
@@ -198,8 +232,8 @@ export default {
   vertical-align: middle;
 }
 
-.sponsorcol {
+/* .sponsorcol {
   margin: auto;
   vertical-align: middle;
-}
+} */
 </style>

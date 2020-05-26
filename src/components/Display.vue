@@ -4,8 +4,10 @@
     <!-- {{ currentlyserving }} -->
     <!-- currently served numbers -->
 
-    <b-alert :show="showtitle" variant="dark" class="bold">
-      {{ $t("alerts.currentlyserved") }}
+    <b-alert :show="showtitle" variant="dark">
+      <h4>
+        {{ $t("alerts.currentlyserved") }}
+      </h4>
     </b-alert>
 
     <div v-if="this.currentlyserving && this.currentlyservingsize > 0">
@@ -18,11 +20,22 @@
         >
           <b-card
             v-if="servicewindow == null || servicewindow == cn.servicewindow"
-            :header="cn.servicewindow"
             class="mb-2"
             :style="'min-height:' + minheight + 'px;'"
             :id="label"
           >
+            <template v-slot:header v-if="cn.servicewindow">
+              <span
+                v-if="
+                  ur.windowtypeLang &&
+                    ur.windowtypeLang[cn.servicewindow] &&
+                    ur.windowtypeLang[cn.servicewindow][lang]
+                "
+              >
+                {{ ur.windowtypeLang[cn.servicewindow][lang] }}
+              </span>
+              <span v-else>{{ cn.servicewindow }}</span>
+            </template>
             <b-card-body>
               <b-row
                 style="margin:0px"
@@ -31,12 +44,12 @@
                 :id="label + '-' + window"
               >
                 <b-col class="bordered">
-                  {{ $t("labels.window") }}
-                  <span class="bold"><number :to="window"/></span>
-                </b-col>
-                <b-col class="bordered">
                   {{ $t("labels.number") }}
                   <span class="bold"><number :to="number" /> </span>
+                </b-col>
+                <b-col class="bordered">
+                  {{ $t("labels.window") }}
+                  <span class="bold"><number :to="window"/></span>
                 </b-col>
               </b-row>
             </b-card-body>
@@ -62,7 +75,16 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "Display",
-  props: ["ur", "pk", "servicewindow", "dir", "ta", "showtime", "showdate"],
+  props: [
+    "ur",
+    "pk",
+    "servicewindow",
+    "dir",
+    "ta",
+    "showtime",
+    "showdate",
+    "lang",
+  ],
   data() {
     return {
       //provider: {},

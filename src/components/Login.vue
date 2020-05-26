@@ -1,11 +1,7 @@
 <template>
   <div>
     <b-container class="container" :dir="dir">
-      <b-overlay
-        :show="loading"
-        rounded="sm"
-        style="height:100vh;min-height:100vh;widht:100vw;"
-      >
+      <b-overlay :show="loading" rounded="sm">
         <b-form v-if="show" @submit="signIN">
           <h3>{{ $t("nav.signin") }}</h3>
 
@@ -164,23 +160,20 @@ export default {
           this.loading = false;
           this.loginbuttondisabled = false;
           if (
-            (this.lang =
-              "ar-ly" &&
-              error.message ==
-                "The password is invalid or the user does not have a password.")
+            this.lang == "ar-ly" &&
+            error.message ==
+              "The password is invalid or the user does not have a password."
           ) {
             this.error = "كلمة المرور غير صحيحة";
           } else if (
-            (this.lang =
-              "ar-ly" &&
-              error.message ==
-                "There is no user record corresponding to this identifier. The user may have been deleted.")
+            this.lang == "ar-ly" &&
+            error.message ==
+              "There is no user record corresponding to this identifier. The user may have been deleted."
           ) {
             this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
           } else if (
-            (this.lang =
-              "ar-ly" &&
-              error.message == "The email address is badly formatted.")
+            this.lang == "ar-ly" &&
+            error.message == "The email address is badly formatted."
           ) {
             this.error = "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.";
           } else {

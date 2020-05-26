@@ -9,11 +9,13 @@
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
           :disabled="disabledserviceandwindow"
-          :options="this.provider.windowtype"
+          :options="translatedwindowtype"
           :placeholder="$t('select.typeofservice')"
           v-model="servicewindow"
           :dir="dir"
           class="cont"
+          :searchable="false"
+          :reduce="(option) => option.value"
         >
           <template #search="{attributes, events}">
             <input
@@ -33,6 +35,7 @@
           v-model="mywindow"
           :dir="dir"
           class="cont"
+          :searchable="false"
         >
           <template #search="{attributes, events}">
             <input
@@ -120,6 +123,7 @@
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :lang="lang"
         :showtime="showtime"
         :showdate="showdate"
       />
@@ -132,6 +136,7 @@
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :lang="lang"
         :showtime="showtime"
         :showdate="showdate"
       />
@@ -145,6 +150,7 @@
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :lang="lang"
         :showtime="showtime"
         :showdate="showdate"
       />
@@ -157,6 +163,7 @@
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :lang="lang"
       />
 
       <!-- End customer reviews -->
@@ -205,6 +212,25 @@ export default {
     PendingNumbers,
   },
   computed: {
+    translatedwindowtype() {
+      var twtAr = [];
+      this.provider.windowtype.forEach((twt) => {
+        if (
+          this.provider.windowtypeLang &&
+          this.provider.windowtypeLang[twt] &&
+          this.provider.windowtypeLang[twt][this.lang]
+        ) {
+          twtAr.push({
+            label: this.provider.windowtypeLang[twt][this.lang],
+            value: twt,
+          });
+        } else {
+          twtAr.push({ label: twt, value: twt });
+        }
+      });
+
+      return twtAr;
+    },
     disabledserviceandwindow() {
       if (this.servingnumber) return true;
       else return false;

@@ -7,7 +7,7 @@
         </h3>
         <b-form v-if="show" @submit.prevent="updateProfile">
           <b-row align-h="center">
-            <b-col sm="7">
+            <b-col sm="8">
               <b-form-group
                 :style="'text-align: ' + ta + ';'"
                 id="input-group-1"
@@ -20,6 +20,7 @@
                   v-model="form.displayName"
                   type="text"
                   required
+                  @input="changesmade = true"
                   :placeholder="$t('text.branch_name')"
                 ></b-form-input>
               </b-form-group>
@@ -56,6 +57,8 @@
                   v-model="form.servicetype"
                   :label="lang"
                   :dir="dir"
+                  :searchable="false"
+                  @input="changesmade = true"
                 >
                   <!-- :reduce="(option) => option.id" -->
                   <!-- <template v-slot:option="option">
@@ -93,6 +96,7 @@
                   class="mb-2"
                   :dir="dir"
                   :style="'text-align: ' + ta + ';'"
+                  @input="changesmade = true"
                 ></b-form-tags>
               </b-form-group>
 
@@ -108,6 +112,7 @@
                   :locale="lang"
                   :placeholder="$t('text.timenotset')"
                   v-model="form.opentime"
+                  @input="changesmade = true"
                 ></b-form-timepicker>
               </b-form-group>
 
@@ -118,9 +123,11 @@
                 class="input-title"
               >
                 <b-form-timepicker
+                  size="md"
                   :locale="lang"
                   :placeholder="$t('text.timenotset')"
                   v-model="form.closetime"
+                  @input="changesmade = true"
                 ></b-form-timepicker>
               </b-form-group>
 
@@ -130,9 +137,10 @@
                 class="input-title"
               >
                 <b-form-checkbox-group
-                  size="sm"
+                  size="md"
                   v-model="form.opendays"
                   :options="daysofweek"
+                  @input="changesmade = true"
                 ></b-form-checkbox-group>
               </b-form-group>
 
@@ -202,8 +210,130 @@
                   type="text"
                   required
                   :placeholder="$t('text.email_branch')"
+                  @input="changesmade = true"
                 ></b-form-input>
               </b-form-group>
+
+              <!-- showPendingNumbers -->
+              <hr />
+              <b-row>
+                <b-col cols="7" style="display: flex;">
+                  <div
+                    class="input-title providerinfo"
+                    :style="'text-align: ' + ta + ';'"
+                  >
+                    {{
+                      $t("text.showtopublic", {
+                        value: $t("alerts.pendingnumbers"),
+                      })
+                    }}
+                  </div>
+                </b-col>
+                <b-col>
+                  <b-button
+                    variant="outline-danger"
+                    style="margin:0px;"
+                    v-if="form.showPendingNumbers == false"
+                    @click="form.showPendingNumbers = true"
+                  >
+                    <b-icon-toggle-on rotate="180" font-scale="1.8" />
+                    {{ $t("buttons.hide") }}
+                  </b-button>
+                  <b-button
+                    variant="outline-primary"
+                    style="margin: 0px;"
+                    v-if="form.showPendingNumbers == true"
+                    @click="
+                      form.showPendingNumbers = false;
+                      changesmade = true;
+                    "
+                  >
+                    <b-icon-toggle-on font-scale="1.8" />
+                    {{ $t("buttons.show") }}
+                  </b-button>
+                </b-col>
+              </b-row>
+              <!-- <hr /> -->
+              <!-- showDisplay -->
+              <!-- <hr /> --><br />
+              <b-row>
+                <b-col cols="7" style="display: flex;">
+                  <div
+                    class="input-title providerinfo"
+                    :style="'text-align: ' + ta + ';'"
+                  >
+                    {{
+                      $t("text.showtopublic", {
+                        value: $t("alerts.currentlyserved"),
+                      })
+                    }}
+                  </div>
+                </b-col>
+                <b-col>
+                  <b-button
+                    variant="outline-danger"
+                    style="margin:0px;"
+                    v-if="form.showDisplay == false"
+                    @click="form.showDisplay = true"
+                  >
+                    <b-icon-toggle-on rotate="180" font-scale="1.8" />
+                    {{ $t("buttons.hide") }}
+                  </b-button>
+                  <b-button
+                    variant="outline-primary"
+                    style="margin: 0px;"
+                    v-if="form.showDisplay == true"
+                    @click="
+                      form.showDisplay = false;
+                      changesmade = true;
+                    "
+                  >
+                    <b-icon-toggle-on font-scale="1.8" />
+                    {{ $t("buttons.show") }}
+                  </b-button>
+                </b-col>
+              </b-row>
+              <!-- <hr /> -->
+              <!-- showTotalNumbers -->
+              <!-- <hr /> --><br />
+              <b-row>
+                <b-col cols="7" style="display: flex;">
+                  <div
+                    class="input-title providerinfo"
+                    :style="'text-align: ' + ta + ';'"
+                  >
+                    {{
+                      $t("text.showtopublic", {
+                        value: $t("alerts.totalnumbers"),
+                      })
+                    }}
+                  </div>
+                </b-col>
+                <b-col>
+                  <b-button
+                    variant="outline-danger"
+                    style="margin:0px;"
+                    v-if="form.showTotalNumbers == false"
+                    @click="
+                      form.showTotalNumbers = true;
+                      changesmade = true;
+                    "
+                  >
+                    <b-icon-toggle-on rotate="180" font-scale="1.8" />
+                    {{ $t("buttons.hide") }}
+                  </b-button>
+                  <b-button
+                    variant="outline-primary"
+                    style="margin: 0px;"
+                    v-if="form.showTotalNumbers == true"
+                    @click="form.showTotalNumbers = false"
+                  >
+                    <b-icon-toggle-on font-scale="1.8" />
+                    {{ $t("buttons.show") }}
+                  </b-button>
+                </b-col>
+              </b-row>
+              <hr />
 
               <b-alert
                 :variant="alertcolor"
@@ -213,26 +343,40 @@
               >
                 {{ alertmsg }}
               </b-alert>
+              <b-row style="margin:0px;">
+                <b-col>
+                  <b-button block type="submit" variant="primary">
+                    {{ $t("buttons.save") }}
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button
+                    block
+                    @click="passwordmodal = true"
+                    variant="warning"
+                  >
+                    {{ $t("text.passwordchange") }}
+                  </b-button>
+                </b-col>
+                <b-col>
+                  <b-button block @click="mapmodal = true" variant="info">
+                    {{ $t("buttons.changecord") }}
+                  </b-button>
+                </b-col>
+                <b-col v-if="ur.displayNameLang">
+                  <b-button
+                    block
+                    v-if="ur.displayNameLang"
+                    @click="translationmodal = true"
+                    variant="secondary"
+                  >
+                    {{ $t("buttons.edittranslation") }}
+                  </b-button>
+                </b-col>
+              </b-row>
+              <br /><br />
 
-              <b-button type="submit" variant="primary">
-                {{ $t("buttons.save") }}
-              </b-button>
-
-              <b-button @click="passwordmodal = true" variant="warning">
-                {{ $t("text.passwordchange") }}
-              </b-button>
-
-              <b-button @click="mapmodal = true" variant="info">
-                {{ $t("buttons.changecord") }}
-              </b-button>
-
-              <b-button
-                v-if="ur.displayNameLang"
-                @click="translationmodal = true"
-                variant="secondary"
-              >
-                {{ $t("buttons.edittranslation") }}
-              </b-button>
+              <!-- <pre>{{ this.form.windowtypeLang }}</pre> -->
             </b-col>
           </b-row>
         </b-form>
@@ -320,6 +464,7 @@
         :cancel-title="$t('buttons.cancel')"
         @ok="updateProfileLang"
         :dir="dir"
+        size="lg"
       >
         <b-form-group
           :style="'text-align: ' + ta + ';'"
@@ -328,25 +473,86 @@
           class="input-title"
           :dir="dir"
         >
-          <b-form-input
-            v-if="ur.displayNameLang && ur.displayNameLang['ar-ly']"
-            id="displayname-ar"
-            v-model="form.displayNameLang['ar-ly']"
-            type="text"
-            required
-            placeholder="إسم الفرع باللغة العربية"
-            dir="rtl"
-          ></b-form-input>
-          <b-form-input
-            id="displayname-en"
-            v-if="ur.displayNameLang && ur.displayNameLang['en']"
-            v-model="form.displayNameLang['en']"
-            type="text"
-            required
-            placeholder="Branch Name in English"
-            dir="ltr"
-          ></b-form-input>
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-if="ur.displayNameLang && ur.displayNameLang['ar-ly']"
+                id="displayname-ar"
+                v-model="form.displayNameLang['ar-ly']"
+                type="text"
+                required
+                placeholder="إسم الفرع باللغة العربية"
+                dir="rtl"
+              ></b-form-input>
+            </b-col>
+            <b-col>
+              <b-form-input
+                id="displayname-en"
+                v-if="ur.displayNameLang && ur.displayNameLang['en']"
+                v-model="form.displayNameLang['en']"
+                type="text"
+                required
+                placeholder="Branch Name in English"
+                dir="ltr"
+              ></b-form-input>
+            </b-col>
+          </b-row>
         </b-form-group>
+        <!-- Start Edit translation for service windows -->
+
+        <b-form-group
+          :style="'text-align: ' + ta + ';'"
+          :label="$t('labels.servicewindow')"
+          label-for="servicewindow-translation"
+          class="input-title"
+          :dir="dir"
+          v-if="ur.windowtypeLang"
+        >
+          <b-row v-for="(windowtype, key) in form.windowtype" v-bind:key="key">
+            <b-col cols="12">
+              <hr />
+              <span
+                style="display: flex;justify-content: center;font-size:0.8em;"
+              >
+                {{ windowtype }}</span
+              >
+              <hr />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-if="form.windowtypeLang && form.windowtypeLang[windowtype]"
+                :id="'servicewindow-translation-ar' + windowtype"
+                v-model="form.windowtypeLang[windowtype]['ar-ly']"
+                type="text"
+                required
+                placeholder="نوع الخدمة باللغة العربية"
+                dir="rtl"
+              ></b-form-input>
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-if="form.windowtypeLang && form.windowtypeLang[windowtype]"
+                v-model="form.windowtypeLang[windowtype]['en']"
+                type="text"
+                required
+                placeholder="Service Type in English"
+                dir="ltr"
+              ></b-form-input>
+            </b-col>
+          </b-row>
+        </b-form-group>
+        <!-- End Edit translation for service windows -->
+      </b-modal>
+      <b-modal
+        v-model="leavemodal"
+        id="modal-3"
+        :title="$t('text.confirmleave')"
+        :ok-title="$t('buttons.ok')"
+        :cancel-title="$t('buttons.cancel')"
+        :dir="dir"
+        @ok="itsokaytoleave"
+      >
+        {{ $t("text.leaveask") }}
       </b-modal>
     </b-container>
   </div>
@@ -381,8 +587,11 @@ export default {
       emailmodal: false,
       passwordmodal: false,
       translationmodal: false,
+      leavemodal: false,
+      pathtogo: null,
       mapmodal: false,
       loading: false,
+      changesmade: false,
       error: "",
       vuephone: "",
       show: true,
@@ -427,7 +636,28 @@ export default {
     //   return Object.keys(this.servicetypes);
     // },
   },
+  beforeRouteLeave(to, from, next) {
+    //console.log(to);
+    this.pathtogo = to.name;
+    if (this.changesmade) {
+      this.leavemodal = true;
+      // const answer = window.confirm(
+      //   "Do you really want to leave? you have unsaved changes!"
+      // );
+      // if (answer) {
+      //   next();
+      // } else {
+      //   next(false);
+      // }
+    } else {
+      next();
+    }
+  },
   methods: {
+    itsokaytoleave() {
+      this.changesmade = false;
+      this.$router.push({ name: this.pathtogo, query: {} });
+    },
     convertphone(payload) {
       this.form.phoneNumber = payload.phoneNumber;
       this.form.formattedNumber = payload.formattedNumber;
@@ -491,15 +721,15 @@ export default {
                   input: error.message,
                 })
                 .then((docRef) => {
-                  console.log("docRef: ", docRef);
-                  console.log("translations written with ID: ", docRef.id);
+                  //  console.log("docRef: ", docRef);
+                  //  console.log("translations written with ID: ", docRef.id);
                   setTimeout(() => {
                     db.collection("translations")
                       .doc(docRef.id)
                       .get()
                       .then((doc) => {
                         this.loading = false;
-                        console.log(doc.data().translated.ar);
+                        //  console.log(doc.data().translated.ar);
                         this.alertmsg = doc.data().translated.ar;
                         this.alertcolor = "danger";
                         this.showAlert();
@@ -517,6 +747,7 @@ export default {
         } else {
           //Update profile details if email was not changed
           this.updateProfileDetails();
+
           // console.log(
           //   "Update profile details if email was not changed",
           //   this.originalemail,
@@ -527,20 +758,38 @@ export default {
       }
     },
     updateProfileLang() {
+      var obj = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (this.form.displayNameLang) {
+        obj = Object.assign(obj, {
+          displayNameLang: this.form.displayNameLang,
+        });
+      }
+      if (this.form.windowtypeLang) {
+        obj = Object.assign(obj, { windowtypeLang: this.form.windowtypeLang });
+      }
       db.collection("users")
         .doc(this.ur.uid)
-        .set(
-          {
-            displayNameLang: this.form.displayNameLang,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        )
+        .set(obj, { merge: true })
         .then(() => {
           this.alertmsg = this.$t("alerts.savecompleted");
           this.alertcolor = "success";
           this.showAlert();
         });
+    },
+    arraysEqual(a, b) {
+      if (a === b) return true;
+      if (a == null || b == null) return false;
+      if (a.length != b.length) return false;
+
+      // If you don't care about the order of the elements inside
+      // the array, you should sort both arrays here.
+      // Please note that calling sort on an array will modify that array.
+      // you might want to clone your array first.
+
+      for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
     },
     updateProfileDetails() {
       if (
@@ -552,9 +801,44 @@ export default {
           this.form.displayName,
           "users",
           this.ur.uid,
-          "displayNameLang"
+          "displayNameLang",
+          true, //capital
+          "string"
         );
       }
+      if (this.form.windowtype && this.form.windowtype.length > 0) {
+        if (
+          !this.form.windowtypeLang ||
+          !this.arraysEqual(this.ur.windowtype, this.form.windowtype)
+        ) {
+          console.log("Getting windowtype translation");
+          this.form.windowtype.forEach((wt, index) => {
+            var translateit = false;
+            //Check if there are changes
+            //For new input
+            if (!this.ur.windowtypeLang && !this.form.windowtypeLang) {
+              console.log("Translating new", wt);
+              translateit = true;
+            } else if (!this.ur.windowtypeLang[wt]) {
+              console.log("Translating changed ", wt);
+              translateit = true;
+            }
+            if (translateit) {
+              setTimeout(() => {
+                this.gettranslation(
+                  wt,
+                  "users",
+                  this.ur.uid,
+                  "windowtypeLang",
+                  true, //capital
+                  "object"
+                );
+              }, index * 3000);
+            }
+          }); //End forEach
+        }
+      }
+      console.log("saving form to users table");
 
       db.collection("users")
         .doc(this.ur.uid)
@@ -570,11 +854,15 @@ export default {
             servicetype: this.form.servicetype,
             windowtype: this.form.windowtype,
             coordinates: this.form.coordinates,
+            showPendingNumbers: this.form.showPendingNumbers,
+            showDisplay: this.form.showDisplay,
+            showTotalNumbers: this.form.showTotalNumbers,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           },
           { merge: true }
         )
         .then(() => {
+          this.changesmade = false;
           this.alertmsg = this.$t("alerts.savecompleted");
           this.alertcolor = "success";
           this.showAlert();
@@ -666,8 +954,17 @@ export default {
         });
     },
     // receives a place object via the autocomplete component
-    gettranslation(input, collection, docid, fieldname) {
+    gettranslation(
+      input,
+      collection,
+      docid,
+      fieldname,
+      capital,
+      destinationtype
+    ) {
       var output = null;
+      var translated = false;
+      console.log("Getting translation for: ", input);
       db.collection("translations")
         .add({
           input: input,
@@ -678,15 +975,41 @@ export default {
               .doc(docRef.id)
               .get()
               .then((doc) => {
-                output = {
-                  en: this.capitalize_Words(doc.data().translated.en),
-                  "ar-ly": doc.data().translated.ar,
-                };
-                console.log(output);
+                console.log("translated: ", doc.data().translated);
+                if (doc.data().translated) {
+                  translated = true;
+                  if (capital == true) {
+                    var english = this.capitalize_Words(
+                      doc.data().translated.en
+                    );
+                  } else {
+                    english = doc.data().translated.en;
+                  }
+                  output = {
+                    en: english,
+                    "ar-ly": doc.data().translated.ar,
+                  };
+                }
+                console.log("writing output: ", output);
               })
               .then(() => {
-                if (collection && docid && fieldname) {
-                  console.log("writing output to fieldname: ", fieldname);
+                if (collection && docid && fieldname && translated) {
+                  if (destinationtype == "object") {
+                    if (!this.form[fieldname]) {
+                      this.form[fieldname] = {};
+                      //console.log("creating new object in form", fieldname);
+                    }
+                    this.form[fieldname][input] = output;
+
+                    //For firestore
+                    output = { [input]: output };
+                  } else {
+                    //return output
+                    this.form[fieldname] = output;
+                  }
+
+                  console.log("to fieldname: ", fieldname);
+
                   db.collection(collection)
                     .doc(docid)
                     .set(
@@ -694,18 +1017,18 @@ export default {
                         [fieldname]: output,
                       },
                       { merge: true }
-                    );
+                    )
+                    .then(() => {
+                      //Delete trnalation
+                      db.collection("translations")
+                        .doc(docRef.id)
+                        .delete();
+                    });
                 }
 
-                //Delete trnalation
-                db.collection("translations")
-                  .doc(docRef.id)
-                  .delete();
-                //return output
-                this.form[fieldname] = output;
                 return output;
               });
-          }, 3000);
+          }, 4500);
         });
       //End Translatation
     },
@@ -753,7 +1076,10 @@ export default {
   created() {
     // Object.assign(this.form, this.ur);
     this.form = JSON.parse(JSON.stringify(this.ur));
-    this.vuephone = this.ur.phoneNumber;
+    // if (!this.form.windowtype) {
+    //   this.form.windowtype = null;
+    // }
+    this.vuephone = this.form.phoneNumber;
     this.originalemail = JSON.parse(JSON.stringify(this.ur.email));
     // console.log(
     //   "reseting original email from",
@@ -774,67 +1100,12 @@ export default {
     }
 
     //Get possible service types
-    db.collection("categories")
-      // .get()
-      .onSnapshot((querySnapshot) => {
-        this.servicetype = [];
-        querySnapshot.forEach((doc) => {
-          this.servicetypes.push(doc.data());
-          // this.servicetypes[doc.id] = doc.data();
-          //this.servicetypes[doc.id].id = doc.id;
-          // console.log(doc.data());
-        });
+    db.collection("categories").onSnapshot((querySnapshot) => {
+      this.servicetype = [];
+      querySnapshot.forEach((doc) => {
+        this.servicetypes.push(doc.data());
       });
-    /*
-    db.collection("users").onSnapshot((querySnapshot) => {
-      var servicetypes = [
-        "مصارف",
-        "مخابز",
-        "محلات مواد غدائية",
-        "محلات حلويات",
-        "محلات خضروات",
-        "موزعين غار",
-        "محطات بنزين",
-        "حلاقين",
-        "صيدليات",
-        "عيادات",
-        "الجوازات",
-        "قنصليات",
-        "مراكز حكومية",
-      ];
-      querySnapshot.forEach(function(doc) {
-        if (
-          doc.data().servicetype != null &&
-          !servicetypes.includes(doc.data().servicetype)
-        ) {
-          servicetypes.push(doc.data().servicetype);
-        }
-      });
-      //console.log("Current Service Types: ", servicetypes.join(", "));
-      this.servicetypes = servicetypes;
     });
-    */
-    // console.log("copying ur to form");
-    /*
-    this.displayName = this.ur.displayName;
-    this.email = this.ur.email;
-
-    this.vuephone = this.ur.phoneNumber;
-    this.phoneNumber = this.ur.phoneNumber;
-    */
-    /*if (user) {
-          this.displayName = user.displayName;
-          //this.photoURL = user.photoURL
-          this.email = user.email;
-          this.originalemail = user.email;
-          firebase.database().ref('users').child(user.uid).once('value', snapshot => {
-            if (snapshot.val()) {
-              this.vuephone = snapshot.val().phoneNumber;
-              this.phoneNumber = snapshot.val().phoneNumber;
-            }
-          })
-        }
-    */
   },
 };
 </script>
@@ -883,5 +1154,9 @@ p a {
   justify-content: center;
   align-items: center;
   width: 100%;
+}
+.providerinfo {
+  margin: auto;
+  vertical-align: middle;
 }
 </style>

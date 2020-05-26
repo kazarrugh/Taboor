@@ -1,10 +1,12 @@
 <template>
-  <div>
+  <div :dir="dir">
     <!-- <b-container class="container" :dir="dir"> -->
     <!-- {{ currentnumber }} -->
     <div v-if="this.currentnumber && currentnumbersize > 0">
-      <b-alert show variant="dark" class="bold">
-        {{ $t("alerts.totalnumbers") }}
+      <b-alert show variant="dark">
+        <h4>
+          {{ $t("alerts.totalnumbers") }}
+        </h4>
       </b-alert>
       <!-- v-if="servicewindow == null" -->
       <b-row fluid>
@@ -16,10 +18,22 @@
         >
           <b-card
             v-if="servicewindow == null || servicewindow == cn.servicewindow"
-            :header="cn.servicewindow"
             class="mb-2"
             :id="label"
           >
+            <template v-slot:header v-if="cn.servicewindow">
+              <span
+                v-if="
+                  ur.windowtypeLang &&
+                    ur.windowtypeLang[cn.servicewindow] &&
+                    ur.windowtypeLang[cn.servicewindow][lang]
+                "
+              >
+                {{ ur.windowtypeLang[cn.servicewindow][lang] }}
+              </span>
+              <span v-else>{{ cn.servicewindow }}</span>
+            </template>
+
             <b-card-text class="bold"> <number :to="cn.number"/></b-card-text>
             <template v-slot:footer v-if="cn.updatedAt">
               {{ $t("text.lastupdated") }}
@@ -42,7 +56,16 @@ import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
 export default {
   name: "TotalNumbers",
-  props: ["ur", "pk", "servicewindow", "dir", "ta", "showtime", "showdate"],
+  props: [
+    "ur",
+    "pk",
+    "servicewindow",
+    "dir",
+    "ta",
+    "showtime",
+    "showdate",
+    "lang",
+  ],
   data() {
     return {
       currentnumber: {},

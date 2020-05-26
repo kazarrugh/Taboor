@@ -11,7 +11,7 @@
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-1"
-              :label="$t('labels.name')"
+              :label="$t('labels.name') + ' *'"
               label-for="input-1"
               class="input-title"
             >
@@ -19,6 +19,7 @@
                 id="input-1"
                 v-model="form.displayName"
                 type="text"
+                required
                 :placeholder="$t('text.fullname')"
               ></b-form-input>
             </b-form-group>
@@ -44,7 +45,7 @@
             <b-form-group
               :style="'text-align: ' + ta + ';'"
               id="input-group-3"
-              :label="$t('labels.review')"
+              :label="$t('labels.review') + ' *'"
               label-for="input-3"
               class="input-title"
             >
@@ -64,6 +65,17 @@
               class="input-title"
             >
               <b-form-textarea
+                v-if="ur.displayNamelang && ur.displayNamelang[lang]"
+                v-model="form.comment"
+                :placeholder="
+                  $t('text.howexperince', { value: ur.displayNamelang[lang] })
+                "
+                rows="3"
+                max-rows="6"
+              ></b-form-textarea>
+
+              <b-form-textarea
+                v-else
                 v-model="form.comment"
                 :placeholder="
                   $t('text.howexperince', { value: ur.displayName })
@@ -72,16 +84,17 @@
                 max-rows="6"
               ></b-form-textarea>
             </b-form-group>
+
+            <b-alert
+              variant="danger"
+              :show="dismissCountDown"
+              @dismissed="dismissCountDown = 0"
+              @dismiss-count-down="countDownChanged"
+            >
+              {{ alertmsg }}
+            </b-alert>
           </b-col>
         </b-row>
-        <b-alert
-          variant="danger"
-          :show="dismissCountDown"
-          @dismissed="dismissCountDown = 0"
-          @dismiss-count-down="countDownChanged"
-        >
-          {{ alertmsg }}
-        </b-alert>
 
         <b-button type="submit" variant="success">
           {{ $t("buttons.submitreview") }}
@@ -103,7 +116,7 @@ const db = firebase.firestore();
 
 export default {
   name: "Review",
-  props: ["ur", "pk", "servicewindow", "dir", "ta"],
+  props: ["ur", "pk", "servicewindow", "dir", "ta", "lang"],
   data() {
     return {
       form: {
@@ -130,9 +143,15 @@ export default {
   methods: {
     AddReview(evt) {
       evt.preventDefault();
+      if (!this.form.rating) {
+        this.alertmsg = this.$t("alerts.ratingrequired");
+        this.showAlert();
+        return false;
+      }
+
       db.collection("reviews")
         .add(this.form)
-        .then(() => {
+        .then((doc) => {
           if (this.form.rating != null) {
             // Compute new number of ratings
             var newNumRatings = this.ur.numRatings + 1;
@@ -151,6 +170,28 @@ export default {
               });
           }
           //console.log("review added");
+
+          //Translate name
+          if (this.form.displayName) {
+            this.gettranslation(
+              this.form.displayName,
+              "reviews",
+              doc.id,
+              "displayNameLang",
+              true //capital
+            );
+          }
+          //translate comment
+          if (this.form.comment) {
+            this.gettranslation(
+              this.form.comment,
+              "reviews",
+              doc.id,
+              "commentLang",
+              false //capital
+            );
+          }
+
           this.startover();
         })
         .catch((error) => {
@@ -162,8 +203,16 @@ export default {
       this.$emit("reviewed", this.form.displayName, this.form.phoneNumber);
     },
     convertphone(payload) {
-      this.form.phoneNumber = payload.phoneNumber;
-      this.form.formattedNumber = payload.formattedNumber;
+      if (payload.phoneNumber) {
+        this.form.phoneNumber = payload.phoneNumber;
+      } else {
+        this.form.phoneNumber = null;
+      }
+      if (payload.formattedNumber) {
+        this.form.formattedNumber = payload.formattedNumber;
+      } else {
+        this.form.formattedNumber = null;
+      }
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
@@ -171,13 +220,75 @@ export default {
     showAlert() {
       this.dismissCountDown = this.dismissSecs;
     },
+    capitalize_Words(str) {
+      return str.replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    },
+    gettranslation(input, collection, docid, fieldname, capital) {
+      var output = null;
+      db.collection("translations")
+        .add({
+          input: input,
+        })
+        .then((docRef) => {
+          setTimeout(() => {
+            db.collection("translations")
+              .doc(docRef.id)
+              .get()
+              .then((doc) => {
+                if (capital == true) {
+                  var english = this.capitalize_Words(doc.data().translated.en);
+                } else {
+                  english = doc.data().translated.en;
+                }
+                output = {
+                  en: english,
+                  "ar-ly": doc.data().translated.ar,
+                };
+
+                //console.log(output);
+              })
+              .then(() => {
+                if (collection && docid && fieldname) {
+                  //console.log("writing output to fieldname: ", fieldname);
+                  db.collection(collection)
+                    .doc(docid)
+                    .set(
+                      {
+                        [fieldname]: output,
+                      },
+                      { merge: true }
+                    )
+                    .then(() => {
+                      //Delete trnalation
+                      db.collection("translations")
+                        .doc(docRef.id)
+                        .delete();
+                    });
+                }
+
+                //return output
+                this.form[fieldname] = output;
+                return output;
+              });
+          }, 3000);
+        });
+      //End Translatation
+    },
   },
   beforeCreate() {},
   created() {
     this.form.provider = this.pk;
     this.form.servicewindow = this.servicewindow;
-    this.form.displayName = this.$session.get("clientname");
-    this.vuephone = this.$session.get("clientphone");
+    if (this.$session.get("clientname")) {
+      this.form.displayName = this.$session.get("clientname");
+    }
+    if (this.$session.get("clientphone")) {
+      var phone = this.$session.get("clientphone").replace(/-/g, "");
+      //console.log("getting client phone", phone);
+      this.vuephone = phone;
+    }
   },
   mounted() {},
 };

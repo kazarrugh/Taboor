@@ -21,12 +21,14 @@
       >
         <v-select
           v-if="provider.windowtype && provider.windowtype.length > 1"
-          :options="this.provider.windowtype"
+          :options="translatedwindowtype"
           :placeholder="$t('select.typeofserviceneeded')"
           v-model="servicewindow"
           v-on:input="changeservicewindow"
           class="cont"
           :dir="dir"
+          :searchable="false"
+          :reduce="(option) => option.value"
         >
           <template #search="{attributes, events}">
             <input
@@ -52,8 +54,10 @@
       <b-spinner v-if="getnumberspinner" class="cont"></b-spinner>
       <!-- End Get Number-->
       <!-- Start Show my numebr -->
-      <b-alert show v-if="mynumber != null" variant="dark" class="bold cont">
-        {{ $t("alerts.mynumberinline") }}
+      <b-alert show v-if="mynumber != null" variant="dark" class="cont ">
+        <h4 class="bold">
+          {{ $t("alerts.mynumberinline") }}
+        </h4>
       </b-alert>
 
       <b-card
@@ -73,14 +77,24 @@
           <div
             v-if="
               timeahead &&
+                provider_open_now &&
                 timeahead > $moment().format('X') &&
                 servicedate == $moment().format('YYYY-MM-DD')
             "
             class="mynumberinline"
           >
-            <div>Wait time in Seconds {{ this.secondsahead }}</div>
             {{ $t("alerts.estimatedtime") }}
+
             {{ (secondsahead * 1000) | duration("humanize") }}
+            <div>
+              {{
+                $t("text.or") +
+                  " " +
+                  Math.ceil(this.secondsahead) +
+                  " " +
+                  $t("text.seconds")
+              }}
+            </div>
           </div>
         </b-card-text>
         <template v-slot:footer v-if="servicedate">
@@ -88,6 +102,7 @@
           <span
             v-if="
               timeahead &&
+                provider_open_now &&
                 timeahead > $moment().format('X') &&
                 servicedate == $moment().format('YYYY-MM-DD')
             "
@@ -143,6 +158,7 @@
         :servicewindow="servicewindow"
         :dir="dir"
         :ta="ta"
+        :lang="lang"
         @reviewed="reviewadded"
       />
       <!-- End Review -->
@@ -150,6 +166,7 @@
         <!-- currently served numbers -->
 
         <PendingNumbers
+          v-show="provider.showPendingNumbers"
           class="cont"
           :ur="provider"
           :pk="providerkey"
@@ -157,6 +174,7 @@
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :lang="lang"
           :showtime="showtime"
           :showdate="showdate"
           @aheadofme="waitingtime"
@@ -165,12 +183,14 @@
         <!-- currently served numbers -->
 
         <Display
+          v-if="provider.showDisplay"
           class="cont"
           :ur="provider"
           :pk="providerkey"
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :lang="lang"
           :showtime="showtime"
           :showdate="showdate"
         />
@@ -178,12 +198,14 @@
 
         <!-- current total numbers -->
         <TotalNumbers
+          v-if="provider.showTotalNumbers"
           class="cont"
           :ur="provider"
           :pk="providerkey"
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :lang="lang"
           :showtime="showtime"
           :showdate="showdate"
         />
@@ -196,6 +218,7 @@
           :servicewindow="servicewindow"
           :dir="dir"
           :ta="ta"
+          :lang="lang"
         />
         <!-- End customer reviews -->
       </div>
@@ -207,19 +230,20 @@
       class="container cont"
     >
       <!-- Start Provider Information -->
-      <ProviderContact :ur="provider" :dir="dir" :ta="ta" />
+      <ProviderContact :ur="provider" :dir="dir" :ta="ta" :lang="lang" />
       <!-- End Provider Information -->
       <div class="h-100  align-items-center">
-        <b-jumbotron
-          fluid
-          container-fluid
-          :header="$t('select.windownumber') + mywindow"
-          class="container cont"
-        >
+        <b-jumbotron fluid container-fluid class="container cont">
+          <template v-slot:header>
+            {{ $t("select.windownumber") + mywindow }}
+          </template>
           <template v-slot:lead>
             <br />
-            {{ $t("alerts.mynumberinline") + " " + mynumber }}
-            <br /><br />
+            {{ $t("alerts.mynumberinline") + " : " + mynumber }}
+            <br />
+            <br v-if="servicewindow" />
+            {{ servicewindow }}
+            <br />
             {{ servicedate }}
           </template>
         </b-jumbotron>
@@ -288,6 +312,25 @@ export default {
     Reviews,
   },
   computed: {
+    translatedwindowtype() {
+      var twtAr = [];
+      this.provider.windowtype.forEach((twt) => {
+        if (
+          this.provider.windowtypeLang &&
+          this.provider.windowtypeLang[twt] &&
+          this.provider.windowtypeLang[twt][this.lang]
+        ) {
+          twtAr.push({
+            label: this.provider.windowtypeLang[twt][this.lang],
+            value: twt,
+          });
+        } else {
+          twtAr.push({ label: twt, value: twt });
+        }
+      });
+
+      return twtAr;
+    },
     singlewaittime() {
       if (
         this.provider &&
@@ -299,6 +342,35 @@ export default {
       } else {
         return 0;
       }
+    },
+    provider_open_now() {
+      if (
+        this.provider.opentime &&
+        this.provider.closetime &&
+        this.provider.opendays
+      ) {
+        var opentimeAr = this.provider.opentime.split(":");
+        var opentime =
+          +opentimeAr[0] * 60 * 60 + +opentimeAr[1] * 60 + +opentimeAr[2];
+
+        var closetimeAr = this.provider.closetime.split(":");
+        var closetime =
+          +closetimeAr[0] * 60 * 60 + +closetimeAr[1] * 60 + +closetimeAr[2];
+
+        var nowinseconds =
+          this.$moment().format("X") -
+          this.$moment(this.$moment().format("YYYY-MM-DD")).format("X");
+
+        if (
+          nowinseconds > opentime &&
+          nowinseconds < closetime &&
+          this.provider.opendays.includes(this.$moment().isoWeekday())
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      } else return false;
     },
     mywindow() {
       if (
@@ -664,12 +736,7 @@ export default {
       .doc(this.providerkey)
       .onSnapshot((doc) => {
         this.provider = doc.data();
-        // if (
-        //   this.provider.windowtype == null ||
-        //   this.provider.windowtype.length == 0
-        // ) {
-        //   this.servicewindow = "اجمالي عدد الطابور";
-        // }
+
         if (this.provider.windowtype && this.provider.windowtype.length > 0) {
           this.getnumberdisabled = true;
         }
@@ -716,6 +783,11 @@ export default {
         this.waitingtime(this.servicewindow, this.peopleahead);
       }
     },
+    provider_open_now() {
+      if (this.servicewindow && this.peopleahead) {
+        this.waitingtime(this.servicewindow, this.peopleahead);
+      }
+    },
   },
   mounted() {},
 };
@@ -734,6 +806,10 @@ export default {
 .v-select {
   font-size: 20px;
 }
+/* .v-select > .vs__dropdown-toggle > .vs__selected-options > .vs__search {
+  text-align: center !important;
+} */
+
 .mynumberinline {
   font-size: 0.7em;
   padding-bottom: 10px;
