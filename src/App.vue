@@ -38,6 +38,7 @@
       :mydocidprop="clientdata.docid"
       @getdistance="getproviders"
       @updateclient="updateclient"
+      @addclientcontact="addclientcontact"
     />
 
     <splash-screen v-if="!loaded" />
@@ -169,6 +170,18 @@ export default {
         this.clientdata.docid = docid;
       } else {
         this.clientdata.docid = null;
+      }
+    },
+    addclientcontact(name, phone) {
+      if (name) {
+        //this.clientname = name;
+        this.$session.set("clientname", name);
+        this.clientdata.clientname = name;
+      }
+      if (phone) {
+        //this.clientphone = name;
+        this.$session.set("clientphone", phone);
+        this.clientdata.clientphone = phone;
       }
     },
     timenow() {

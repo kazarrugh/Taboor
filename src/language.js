@@ -22,6 +22,7 @@ export const messages = {
       edittranslation: "Edit Translation",
       show: "Active",
       hide: "Hidden",
+      skipcontact: "Skip Contact",
     },
     nav: {
       home: "Home",
@@ -84,6 +85,8 @@ export const messages = {
       seconds: "seconds",
       or: "Or ",
       showtopublic: "Show {value} to public",
+      contactinfo: "My Contact Information",
+      choosetoshare: "Sharing your contact is not required",
     },
     labels: {
       name: "Name: ",
@@ -140,6 +143,7 @@ export const messages = {
       edittranslation: "تعديل الترجمة",
       show: "مفعلة",
       hide: "مخفية",
+      skipcontact: "تخطى التواصل",
     },
     nav: {
       home: "الرئيسية",
@@ -201,6 +205,8 @@ export const messages = {
       or: "او ",
       seconds: "ثانية",
       showtopublic: "اظهار {value} للعامة",
+      contactinfo: "بيانات التواصل معي",
+      choosetoshare: "مشاركة بيانات التواصل غير اجباري",
     },
     labels: {
       name: "الإسم:",

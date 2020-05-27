@@ -121,6 +121,7 @@
       >
         {{ error }}
       </b-alert>
+
       <!-- Start Cancel Request -->
 
       <b-button
@@ -148,6 +149,14 @@
       </b-modal>
 
       <!-- Start Cancel Request -->
+
+      <Getclientinfo
+        v-if="mynumber != null && kyc == true"
+        :dir="dir"
+        :ta="ta"
+        :lang="lang"
+        @savecontact="savecontact"
+      />
 
       <!-- Start Review -->
       <Review
@@ -260,6 +269,7 @@ import TotalNumbers from "@/components/TotalNumbers";
 import PendingNumbers from "@/components/PendingNumbers";
 import Review from "@/components/Review";
 import Reviews from "@/components/Reviews";
+import Getclientinfo from "@/components/getclientinfo";
 
 import firebase from "../firebaseConfig.js";
 const db = firebase.firestore();
@@ -303,6 +313,7 @@ export default {
       peopleahead: null,
       unsubscribe1: null,
       unsubscribe2: null,
+      kyc: false,
     };
   },
   components: {
@@ -312,6 +323,7 @@ export default {
     PendingNumbers,
     Review,
     Reviews,
+    Getclientinfo,
   },
   computed: {
     translatedwindowtype() {
@@ -509,6 +521,13 @@ export default {
           this.reviewadded(this.clientname, this.clientphone);
         });
     },
+    savecontact(name, phone) {
+      if (name && phone) {
+        this.$emit("addclientcontact", name, phone);
+      }
+      this.kyc = false;
+      this.addclientcontact();
+    },
     addclientcontact() {
       if (
         (this.clientname || this.clientphone) &&
@@ -520,29 +539,17 @@ export default {
           .doc(this.docid)
           .set(
             {
-              // provider: this.providerkey,
-              // servicedate: this.servicedate,
-              // servicewindow: this.servicewindow,
-              // [this.mynumber]: {
-              //   clientname: this.clientname,
-              //   clientphone: this.clientphone,
-              // },
               clientnames: { [this.mynumber]: this.clientname },
               clientphones: { [this.mynumber]: this.clientphone },
             },
             { merge: true }
           );
-      } else {
-        // console.log(
-        //   "Couldn't add client contact because name:",
-        //   this.clientname,
-        //   ", phone:",
-        //   this.clientphone,
-        //   ", docid:",
-        //   this.docid,
-        //   ", my number:",
-        //   this.mynumber
-        // );
+      } else if (
+        (!this.clientname || !this.clientphone) &&
+        this.docid &&
+        this.mynumber
+      ) {
+        this.kyc = true;
       }
     },
     addnewnumber() {
