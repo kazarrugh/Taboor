@@ -183,13 +183,15 @@ export default {
           }
           //translate comment
           if (this.form.comment) {
-            this.gettranslation(
-              this.form.comment,
-              "reviews",
-              doc.id,
-              "commentLang",
-              false //capital
-            );
+            setTimeout(() => {
+              this.gettranslation(
+                this.form.comment,
+                "reviews",
+                doc.id,
+                "commentLang",
+                false //capital
+              );
+            }, 3000);
           }
 
           this.startover();
@@ -204,7 +206,11 @@ export default {
     },
     convertphone(payload) {
       if (payload.phoneNumber) {
-        this.form.phoneNumber = payload.phoneNumber;
+        if (payload.phoneNumber.length == 9) {
+          this.form.phoneNumber = "0" + payload.phoneNumber;
+        } else {
+          this.form.phoneNumber = payload.phoneNumber;
+        }
       } else {
         this.form.phoneNumber = null;
       }
@@ -272,7 +278,7 @@ export default {
                 this.form[fieldname] = output;
                 return output;
               });
-          }, 3000);
+          }, 10000);
         });
       //End Translatation
     },

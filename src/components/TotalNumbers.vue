@@ -71,6 +71,7 @@ export default {
       currentnumber: {},
       lastcurrentnumber: {},
       currentnumbersize: 0,
+      unsubscribe: null,
     };
   },
   computed: {
@@ -115,7 +116,8 @@ export default {
     getcurrentnumbers() {
       //console.log("getting numbers with date ", this.servicedate);
       // Start Listen for snapshot
-      db.collection("currentnumber")
+      this.unsubscribe = db
+        .collection("currentnumber")
         .where("provider", "==", this.pk)
         .where("servicedate", "==", this.servicedate)
         // .where("servicewindow", "==", this.servicewindow)
@@ -175,6 +177,11 @@ export default {
     // End Listen for snapshot
   },
   mounted() {},
+  beforeRouteLeave(to, from, next) {
+    //console.log("unsubscribe");
+    this.unsubscribe();
+    next();
+  },
 };
 </script>
 

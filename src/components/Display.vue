@@ -13,8 +13,8 @@
     <div v-if="this.currentlyserving && this.currentlyservingsize > 0">
       <b-row fluid>
         <b-col
-          v-for="(cn, label) in currentlyserving"
-          v-bind:key="label"
+          v-for="cn in currentlyserving"
+          v-bind:key="cn.id"
           :cols="cols"
           :md="md"
         >
@@ -22,7 +22,7 @@
             v-if="servicewindow == null || servicewindow == cn.servicewindow"
             class="mb-2"
             :style="'min-height:' + minheight + 'px;'"
-            :id="label"
+            :id="cn.id"
           >
             <template v-slot:header v-if="cn.servicewindow">
               <span
@@ -41,7 +41,7 @@
                 style="margin:0px"
                 v-for="(number, window) in cn.inservice"
                 v-bind:key="window"
-                :id="label + '-' + window"
+                :id="cn.id + '-' + window"
               >
                 <b-col class="bordered">
                   {{ $t("labels.number") }}
@@ -67,6 +67,38 @@
       {{ showtime }}
     </div>
     <!-- </b-container> -->
+    <audio
+      id="ding"
+      v-if="this.$router.currentRoute.name == 'Display'"
+      src="../assets/ding.mp3"
+      muted
+    ></audio>
+    <b-modal
+      v-model="modalShow"
+      size="xl"
+      ok-disabled
+      cancel-disabled
+      hide-header
+      hide-footer
+      hide-header-close
+    >
+      <b-jumbotron fluid container-fluid style="text-align:center;">
+        <template v-slot:header>
+          {{ $t("alerts.currentnumber", { value: mynumber }) }}
+        </template>
+        <template v-slot:lead>
+          <div style="font-size:3em">
+            <br />
+            {{ $t("select.windownumber") + mywindow }}
+            <br />
+            <br v-if="myservicewindow" />
+            {{ myservicewindow }}
+          </div>
+          <br />
+          {{ showdate }}
+        </template>
+      </b-jumbotron>
+    </b-modal>
   </div>
 </template>
 
@@ -93,6 +125,11 @@ export default {
       currentlyservingsize: 0,
       lastcurrentlyserving: {},
       servicedate: null,
+      modalShow: false,
+      mynumber: null,
+      mywindow: null,
+      myservicewindow: null,
+      unsubscribe: null,
     };
   },
   computed: {
@@ -124,27 +161,31 @@ export default {
     },
     minheight() {
       var largestwindows = 1;
-      if (this.servicewindow == null) {
-        Object.values(this.currentlyserving).forEach((window) => {
-          var counter = Object.keys(window.inservice).length;
+      var csz = this.currentlyservingsize;
+      var nullservicewindow = false;
+      if (this.servicewindow == null && this.currentlyserving && csz > 0) {
+        Object.values(this.currentlyserving).forEach((servicewindow) => {
+          var counter = Object.keys(servicewindow.inservice).length;
           if (counter > largestwindows) {
             largestwindows = counter;
           }
+          if (servicewindow.servicewindow == null) {
+            nullservicewindow = true;
+          }
         });
       }
-      // else {
-      //   var counter = Object.keys(this.currentlyserving.inservice).length;
-      //   if (counter > largestwindows) {
-      //     largestwindows = counter;
-      //   }
-      // }
 
       if (window.innerWidth < 400) {
         var cardhead = 46;
+        var cardfooter = 46;
       } else {
         cardhead = 49;
+        cardfooter = 49;
       }
-      return largestwindows * 50 + cardhead;
+      if (nullservicewindow) {
+        cardhead = 0;
+      }
+      return largestwindows * 50 + cardhead + cardfooter;
 
       //return 200;
     },
@@ -162,12 +203,105 @@ export default {
       this.servicedate = this.showdate;
       this.getcurrentlyserving();
     },
+    currentlyserving() {
+      //console.log("currentlyserving watch");
+      Object.keys(this.currentlyserving).forEach((swindow) => {
+        /*
+        if (this.lastcurrentlyserving[swindow]) {
+          var o1 = this.lastcurrentlyserving[swindow].inservice;
+        } else {
+          o1 = {};
+        }
+        var o2 = this.currentlyserving[swindow].inservice;
+        let diff = Object.keys(o2).reduce((diff, key) => {
+          if (o1[key] === o2[key]) return diff;
+          return {
+            ...diff,
+            [key]: o2[key],
+          };
+        }, {});
+        console.log("o1:", o1);
+        console.log("o2:", o2);
+        console.log("diff:", diff);
+        */
+        if (
+          this.lastcurrentlyserving &&
+          this.lastcurrentlyserving[swindow] &&
+          this.lastcurrentlyserving[swindow].servingnumber
+        ) {
+          var a1 = this.lastcurrentlyserving[swindow].servingnumber;
+        } else {
+          a1 = this.currentlyserving[swindow].servingnumber;
+        }
+
+        var a2 = this.currentlyserving[swindow].servingnumber;
+        let numdiff = a2 - a1;
+        // console.log("a1:", a1);
+        // console.log("a2:", a2);
+        // console.log("numdiff:", numdiff);
+        if (numdiff > 0) {
+          var alertid = this.currentlyserving[swindow].id;
+          this.updatednumber(alertid, "card-alert-blue");
+
+          var o1 = this.lastcurrentlyserving[swindow].inservice;
+          var o2 = this.currentlyserving[swindow].inservice;
+          let diff = Object.keys(o2).reduce((diff, key) => {
+            if (o1[key] === o2[key]) return diff;
+            return {
+              ...diff,
+              [key]: o2[key],
+            };
+          }, {});
+          // console.log("o1:", o1);
+          // console.log("o2:", o2);
+          // console.log("diff:", diff);
+          var window = Object.keys(diff)[0];
+          this.mywindow = window;
+          this.mynumber = diff[window];
+          if (swindow != "null") {
+            this.myservicewindow = swindow;
+          }
+
+          alertid = this.currentlyserving[swindow].id + "-" + window;
+          setTimeout(() => {
+            this.updatednumber(alertid, "card-alert-red");
+          }, 300); //wait for the card to be updated
+
+          // if (
+          //   diff &&
+          //   Object.keys(diff) &&
+          //   Object.keys(diff)[0] &&
+          //   Object.keys(diff)[0].length > 0
+          // ) {
+          // var key = Object.keys(diff)[0];
+          // var alertid = change.doc.id + "-" + window;
+          // this.updatednumber(alertid, "card-alert-red");
+          // this.updatednumber(key);
+          // Object.keys(diff).forEach((window) => {
+          //   console.log("window changed", window);
+          //   this.mywindow = window;
+          //   this.mynumber = diff[window];
+          //   if (change.doc.data().servicewindow) {
+          //     this.myservicewindow = change.doc.data().servicewindow;
+          //   }
+          //   var alertid = change.doc.id + "-" + window;
+          //   this.updatednumber(alertid, "card-alert-red");
+          // });
+          //}
+        }
+        this.lastcurrentlyserving[swindow] = Object.assign(
+          {},
+          this.currentlyserving[swindow]
+        );
+      });
+    },
   },
   methods: {
     updatednumber(id, classchange) {
-      // console.log("card alert id", id);
+      //console.log("card alert id", id);
       if (document.getElementById(id)) {
         //Check if it is still there or deleted
+        //console.log("found element id", id);
         document.getElementById(id).classList.add(classchange);
       }
       setTimeout(() => {
@@ -175,8 +309,29 @@ export default {
           document.getElementById(id).classList.remove(classchange);
         }
       }, 3000);
+
+      if (
+        this.$router.currentRoute.name == "Display" &&
+        classchange == "card-alert-red"
+      ) {
+        if (this.mynumber && this.mywindow && this.modalShow == false) {
+          //Play Audio
+          document.getElementById("ding").muted = false;
+          document.getElementById("ding").play();
+
+          //Show number on big screen
+          this.modalShow = true;
+          setTimeout(() => {
+            this.modalShow = false;
+            this.mywindow = null;
+            this.mynumber = null;
+            this.myservicewindow = null;
+          }, 10000); //show full screen alert for 10 seconds
+        }
+      }
     },
     getcurrentlyserving() {
+      /*
       // console.log(
       //   "currently serving numbers with date ",
       //   this.servicedate,
@@ -184,7 +339,8 @@ export default {
       //   this.providerkey
       // );
       // Start Listen for snapshot
-      db.collection("currentlyserving")
+      this.unsubscribe = db
+        .collection("currentlyserving")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.servicedate)
         // .where("servicewindow", "==", this.servicewindow)
@@ -225,13 +381,25 @@ export default {
                     [key]: o2[key],
                   };
                 }, {});
-                // console.log("diff:", diff);
+                console.log("o1:", o1);
+                console.log("o2:", o2);
+                console.log("diff:", diff);
                 Object.keys(diff).forEach((window) => {
-                  // console.log("window changed", window);
+                  console.log("window changed", window);
+                  this.mywindow = window;
+                  this.mynumber = diff[window];
+                  if (change.doc.data().servicewindow) {
+                    this.myservicewindow = change.doc.data().servicewindow;
+                  }
+
                   var alertid = change.doc.id + "-" + window;
                   this.updatednumber(alertid, "card-alert-red");
                 });
               }
+              this.lastcurrentlyserving = Object.assign(
+                {},
+                this.currentlyserving
+              );
             }
 
             // if (change.type === "removed") {
@@ -241,7 +409,7 @@ export default {
 
           //Update the current number object
           //console.log("clearing current number");
-          this.lastcurrentlyserving = Object.assign({}, this.currentlyserving);
+          //this.lastcurrentlyserving = Object.assign({}, this.currentlyserving);
 
           this.currentlyservingsize = 0;
           snapshot.forEach((doc) => {
@@ -262,7 +430,43 @@ export default {
             }
           });
         });
+ */
+
+      this.unsubscribe = db
+        .collection("currentlyserving")
+        .where("provider", "==", this.providerkey)
+        .where("servicedate", "==", this.servicedate)
+        .onSnapshot((snapshot) => {
+          this.currentlyserving = {};
+          this.currentlyservingsize = 0;
+          // snapshot.forEach((doc) => {
+          //   this.currentlyserving[doc.id] = doc.data();
+          //   this.currentlyserving[doc.id].id = doc.id;
+          //   this.currentlyservingsize++;
+          // });
+          snapshot.forEach((doc) => {
+            if (Object.keys(doc.data().inservice).length > 0) {
+              var obj = {};
+              obj.servingnumber = doc.data().servingnumber;
+              obj.servicewindow = doc.data().servicewindow;
+              obj.inservice = doc.data().inservice;
+              obj.updatedAt = doc.data().updatedAt;
+              obj.id = doc.id;
+              this.currentlyserving[doc.data().servicewindow] = obj;
+              this.currentlyservingsize++;
+            } else if (this.currentlyserving[doc.data().servicewindow]) {
+              setTimeout(() => {
+                delete this.currentlyserving[doc.data().servicewindow];
+              }, 3000);
+            }
+          });
+        });
     },
+  },
+  beforeRouteLeave(to, from, next) {
+    //console.log("unsubscribe");
+    this.unsubscribe();
+    next();
   },
   beforeCreate() {},
   created() {

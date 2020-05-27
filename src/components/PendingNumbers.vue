@@ -75,6 +75,8 @@ export default {
       currentlyservingloaded: false,
       //   pendingnumberssize: 1,
       diff: null,
+      unsubscribe1: null,
+      unsubscribe2: null,
     };
   },
   computed: {
@@ -203,6 +205,7 @@ export default {
         var servicewindow = Object.values(diff)[0].servicewindow;
         var peopleahead = Object.values(diff)[0].peopleahead;
         this.$emit("aheadofme", servicewindow, peopleahead);
+        //console.log("aheadofme peopleahead", peopleahead);
         //this.diff = Object.values(diff)[0]; //for debug only
       }
 
@@ -223,7 +226,8 @@ export default {
     },
     getcurrentnumbers() {
       // Start Listen for snapshot
-      db.collection("currentnumber")
+      this.unsubscribe1 = db
+        .collection("currentnumber")
         .where("provider", "==", this.pk)
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
@@ -253,7 +257,8 @@ export default {
     },
     getcurrentlyserving() {
       // Start Listen for snapshot
-      db.collection("currentlyserving")
+      this.unsubscribe2 = db
+        .collection("currentlyserving")
         .where("provider", "==", this.pk)
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
@@ -285,6 +290,12 @@ export default {
     // End Listen for snapshot
   },
   mounted() {},
+  beforeRouteLeave(to, from, next) {
+    //console.log("unsubscribe");
+    this.unsubscribe1();
+    this.unsubscribe2();
+    next();
+  },
 };
 </script>
 

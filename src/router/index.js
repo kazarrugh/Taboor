@@ -48,6 +48,7 @@ const routes = [
     path: "/Display",
     name: "Display",
     component: Display,
+    props: { servicewindow: null, pk: null },
   },
   {
     path: "/QrPaper",

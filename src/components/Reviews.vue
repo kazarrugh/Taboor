@@ -43,10 +43,12 @@
               v-if="review.displayNameLang && review.displayNameLang[lang]"
               >{{ review.displayNameLang[lang] }}</b-card-title
             >
-            <!-- <b-card-title v-else>{{ review.displayName }}</b-card-title> -->
+            <b-card-title v-else>{{ review.displayName }}</b-card-title>
 
             <b-card-sub-title class="mb-2">
-              {{ review.phoneNumber }}
+              <a :href="'tel:' + review.formattedNumber">
+                {{ review.phoneNumber }}
+              </a>
             </b-card-sub-title>
 
             <b-card-text :style="'text-align:' + ta + ';'">
@@ -55,7 +57,7 @@
                 {{ review.commentLang[lang] }}
               </span>
               <span v-else>
-                {{ review.commentLang }}
+                {{ review.comment }}
               </span>
             </b-card-text>
           </b-card-body>
@@ -87,7 +89,7 @@ export default {
   name: "Reviews",
   props: ["ur", "pk", "servicewindow", "dir", "ta", "lang"],
   data() {
-    return { reviews: {}, currentPage: 1 };
+    return { reviews: {}, currentPage: 1, unsubscribe: null };
   },
   computed: {
     md() {
@@ -131,7 +133,8 @@ export default {
   beforeCreate() {},
   created() {},
   mounted() {
-    db.collection("reviews")
+    this.unsubscribe = db
+      .collection("reviews")
       .where("provider", "==", this.pk)
       .orderBy("createdAt", "desc")
       .onSnapshot((querySnapshot) => {
@@ -142,6 +145,10 @@ export default {
         });
         // console.log("Current reviews: ", this.reviews);
       });
+  },
+  beforeRouteLeave(to, from, next) {
+    this.unsubscribe();
+    next();
   },
 };
 </script>

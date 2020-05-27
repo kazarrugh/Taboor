@@ -83,6 +83,8 @@ export default {
         clientservice: null,
         servicedate: null,
         docid: null,
+        unsubscribe1: null,
+        unsubscribe2: null,
       },
     };
   },
@@ -216,7 +218,8 @@ export default {
       //var workingdays = [1, 2, 3, 4, 7]; //5 Thursday and 6 Friday
       // var workingdays = [1, 2, 3, 4, 5, 6, 7]; //5 Thursday and 6 Friday
       //console.log(this.$moment().isoWeekday());
-      db.collection("users")
+      this.unsubscribe2 = db
+        .collection("users")
         .where("active", "==", true)
         .orderBy("servicetype")
         .onSnapshot((querySnapshot) => {
@@ -327,7 +330,8 @@ export default {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         //console.log("Logged in user ", user.uid);
-        db.collection("users")
+        this.unsubscribe1 = db
+          .collection("users")
           .doc(user.uid)
           .onSnapshot(
             (doc) => {
@@ -392,7 +396,7 @@ export default {
           this.$emit("logout");
         });
       });
-*/
+  */
     /*
     db.collection("users").add({
     first: "Ada",
@@ -452,6 +456,39 @@ export default {
       window.recaptchaWidgetId = widgetId;
     });
   },
+
+  // beforeRouteLeave(to, from, next) {
+  //   //Test this for now
+  //   this.unsubscribe1();
+  //   this.unsubscribe2();
+  //   next();
+  // },
+  // beforePageLeave(resolve, reject, tab, type) {
+  //   console.log("unsubscribe App");
+  //   this.unsubscribe();
+  //   this.unsubscribe2();
+  //   // types
+  //   const action = {
+  //     close: "shut down",
+  //     refresh: "refresh",
+  //     replace: "replace",
+  //   }[type];
+
+  //   const msg = `Are you sure you want to ${action} tab “${tab.title}”？`;
+
+  //   //If the value has not changed, just leave the tab
+  //   if (this.editValue === this.value) {
+  //     resolve();
+  //     return;
+  //   }
+
+  //   // Confirm the prompt when the value changes
+  //   if (confirm(msg)) {
+  //     resolve();
+  //   } else {
+  //     reject("Refuse to leave the page");
+  //   }
+  // },
 };
 </script>
 <style>

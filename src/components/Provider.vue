@@ -86,7 +86,7 @@
             {{ $t("alerts.estimatedtime") }}
 
             {{ (secondsahead * 1000) | duration("humanize") }}
-            <div>
+            <!-- <div>
               {{
                 $t("text.or") +
                   " " +
@@ -94,7 +94,7 @@
                   " " +
                   $t("text.seconds")
               }}
-            </div>
+            </div> -->
           </div>
         </b-card-text>
         <template v-slot:footer v-if="servicedate">
@@ -301,6 +301,8 @@ export default {
       secondsahead: null,
       timeahead: null,
       peopleahead: null,
+      unsubscribe1: null,
+      unsubscribe2: null,
     };
   },
   components: {
@@ -399,13 +401,19 @@ export default {
   },
   methods: {
     waitingtime(servicewindow, peopleahead) {
+      // console.log("waitingtime peopleahead ", peopleahead);
+      // console.log("mynumber ", this.mynumber);
+      // console.log("singlewaittime ", this.singlewaittime);
+      // console.log("servicewindow ", servicewindow);
+      // console.log("this.servicewindow ", this.servicewindow);
       if (
         this.mynumber &&
         this.singlewaittime &&
-        peopleahead &&
+        peopleahead != null &&
         servicewindow == this.servicewindow
       ) {
         this.peopleahead = peopleahead;
+        //        console.log("peopleahead ", peopleahead);
         var nowinseconds = this.$moment().format("X");
         var timeahead = peopleahead * this.singlewaittime;
         this.secondsahead = peopleahead * this.singlewaittime;
@@ -419,7 +427,8 @@ export default {
       //   "date: ",
       //   this.showdate
       // );
-      db.collection("currentlyserving")
+      this.unsubscribe1 = db
+        .collection("currentlyserving")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.showdate)
         .onSnapshot((snapshot) => {
@@ -732,7 +741,8 @@ export default {
       this.providerkey = this.myproviderprop;
     }
 
-    db.collection("users")
+    this.unsubscribe2 = db
+      .collection("users")
       .doc(this.providerkey)
       .onSnapshot((doc) => {
         this.provider = doc.data();
@@ -790,6 +800,11 @@ export default {
     },
   },
   mounted() {},
+  beforeRouteLeave(to, from, next) {
+    this.unsubscribe1();
+    this.unsubscribe2();
+    next();
+  },
 };
 </script>
 

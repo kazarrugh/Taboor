@@ -1,5 +1,5 @@
 <template>
-  <b-container class="cont" :dir="dir">
+  <b-container class="cont">
     <div>
       <b-button
         block
@@ -21,6 +21,15 @@
           {{ $t("buttons.metres", { value: "300" }) }}
         </b-button>
       </b-button-group>
+      <br :show="dismissCountDown" />
+      <b-alert
+        variant="danger"
+        :show="dismissCountDown"
+        @dismissed="dismissCountDown = 0"
+        @dismiss-count-down="countDownChanged"
+      >
+        {{ error }}
+      </b-alert>
     </div>
     <b-overlay :show="loading" rounded="sm">
       <div v-for="(type, index) in uniqueservicetypes" v-bind:key="index">
@@ -28,11 +37,13 @@
           <h4 class="servicetype-title">{{ type }}</h4>
         </b-alert>
 
-        <VueSlickCarousel v-bind="carousel" class="cont">
-          <!-- <h2>1</h2>
-          <h2>2</h2>
-          <h2>3</h2>
-          <h2>4</h2> -->
+        <VueSlickCarousel
+          id="providersslick"
+          v-bind="carousel"
+          class="cont "
+          @beforeChange="beforeChange"
+          @afterChange="afterChange"
+        >
           <div v-for="pro in providerbycat(type)" v-bind:key="pro.id">
             <b-card>
               <b-card-header @click="viewprovider(pro.id)">
@@ -65,7 +76,7 @@
               <b-card-footer>
                 <b-row>
                   <b-col v-if="pro.phoneNumber">
-                    <a :href="'tel:' + pro.phoneNumber">
+                    <a :href="'tel:' + pro.formattedNumber">
                       <b-icon-phone />
                       {{ pro.phoneNumber }}
                     </a>
@@ -130,13 +141,16 @@ export default {
       loading: false,
       mylocation: null,
       distance: 1000,
+      error: "",
+      dismissSecs: 5,
+      dismissCountDown: 0,
       carousel: {
         arrows: true,
         dots: true,
-        // rtl: true,
+        // rtl: false,
         focusOnSelect: false,
         infinite: true,
-        speed: 500,
+        speed: 300,
         autoplay: true,
         autoplaySpeed: 4000,
         slidesToShow: 4,
@@ -150,7 +164,7 @@ export default {
           {
             breakpoint: 1024,
             settings: {
-              touchThreshold: 4,
+              touchThreshold: 5,
               slidesToShow: 3,
               slidesToScroll: 3,
             },
@@ -158,16 +172,16 @@ export default {
           {
             breakpoint: 600,
             settings: {
-              touchThreshold: 3,
+              touchThreshold: 5,
               slidesToShow: 2,
-              slidesToScroll: 2,
+              slidesToScroll: 3,
             },
           },
           {
             breakpoint: 480,
             settings: {
               arrows: false,
-              touchThreshold: 2,
+              touchThreshold: 5, //Make sure dir is set to ltr
               slidesToShow: 1,
               slidesToScroll: 1,
             },
@@ -214,6 +228,25 @@ export default {
   },
   watch: {},
   methods: {
+    beforeChange() {
+      //console.log("beforeChange");
+      // document.ontouchmove = function(e) {
+      //   e.preventDefault();
+      // };
+      //document.getElementById("providersslick").classList.add("no-touch");
+    },
+    afterChange() {
+      //console.log("afterChange");
+      // document.ontouchmove = function() {
+      //   return true;
+      // };
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert() {
+      this.dismissCountDown = this.dismissSecs;
+    },
     viewprovider(key) {
       this.$router.push({ path: "Provider", query: { key: key } });
     },
@@ -221,16 +254,27 @@ export default {
     geolocate() {
       this.loading = true;
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          this.mylocation = {
-            Pc: position.coords.latitude,
-            Vc: position.coords.longitude,
-          };
-          this.$emit("getdistance", this.mylocation);
-          this.loading = false;
-        });
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.mylocation = {
+              Pc: position.coords.latitude,
+              Vc: position.coords.longitude,
+            };
+            this.$emit("getdistance", this.mylocation);
+            this.loading = false;
+          },
+          (error) => {
+            if (error.code == error.PERMISSION_DENIED) {
+              //console.log("you denied me :-(");
+              this.error = this.$t("alerts.locationerror");
+              this.showAlert();
+            }
+            this.loading = false;
+          }
+        );
       } else {
         console.log("Geolocation is not supported by this browser.");
+        this.loading = false;
       }
     },
   },
@@ -243,7 +287,9 @@ export default {
   margin-top: 30px;
   margin-bottom: 30px;
 }
-
+.no-touch {
+  touch-action: none;
+}
 .servicetype-title {
   margin: 0px;
 }

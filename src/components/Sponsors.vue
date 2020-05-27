@@ -26,6 +26,7 @@ export default {
   data() {
     return {
       sponsors: {},
+      unsubscribe: null,
     };
   },
   components: {},
@@ -33,7 +34,8 @@ export default {
   methods: {},
   beforeCreate() {},
   created() {
-    db.collection("sponsors")
+    this.unsubscribe = db
+      .collection("sponsors")
       .where("active", "==", true)
       .onSnapshot((snapshot) => {
         this.sponsors = {};
@@ -44,6 +46,10 @@ export default {
       });
   },
   mounted() {},
+  beforeRouteLeave(to, from, next) {
+    this.unsubscribe();
+    next();
+  },
 };
 </script>
 

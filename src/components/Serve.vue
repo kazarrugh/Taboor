@@ -202,6 +202,8 @@ export default {
       dismissCountDown: 0,
       timer: null,
       startTimestamp: null,
+      unsubscribe1: null,
+      unsubscribe2: null,
     };
   },
   components: {
@@ -651,7 +653,8 @@ export default {
       //   "date: ",
       //   this.servicedate
       // );
-      db.collection("currentnumber")
+      this.unsubscribe2 = db
+        .collection("currentnumber")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
@@ -670,7 +673,8 @@ export default {
       //   "date: ",
       //   this.servicedate
       // );
-      db.collection("currentlyserving")
+      this.unsubscribe1 = db
+        .collection("currentlyserving")
         .where("provider", "==", this.providerkey)
         .where("servicedate", "==", this.servicedate)
         .onSnapshot((snapshot) => {
@@ -746,6 +750,11 @@ export default {
     }
   },
   mounted() {},
+  beforeRouteLeave(to, from, next) {
+    this.unsubscribe1();
+    this.unsubscribe2();
+    next();
+  },
 };
 </script>
 

@@ -58,6 +58,7 @@ export const messages = {
       estimatedtime: "Estimated waiting time is ",
       peopleahead: "People before me in line ",
       ratingrequired: "Star rating is required",
+      locationerror: "You did not allow location permision",
     },
     text: {
       fullname: "Type Your Full Name",
@@ -174,6 +175,7 @@ export const messages = {
       estimatedtime: "وقت الانتظار التقديري  ",
       peopleahead: " عدد الاشخاص قبلي في طابور",
       ratingrequired: "التقييم بالنجوم اجباري",
+      locationerror: "لم تتم الموافقة على خدمات الموقع",
     },
     text: {
       fullname: "اسمك الثلاتي",

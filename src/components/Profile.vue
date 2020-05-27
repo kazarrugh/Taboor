@@ -231,7 +231,7 @@
                 </b-col>
                 <b-col>
                   <b-button
-                    variant="outline-danger"
+                    variant="outline-secondary"
                     style="margin:0px;"
                     v-if="form.showPendingNumbers == false"
                     @click="form.showPendingNumbers = true"
@@ -271,7 +271,7 @@
                 </b-col>
                 <b-col>
                   <b-button
-                    variant="outline-danger"
+                    variant="outline-secondary"
                     style="margin:0px;"
                     v-if="form.showDisplay == false"
                     @click="form.showDisplay = true"
@@ -311,7 +311,7 @@
                 </b-col>
                 <b-col>
                   <b-button
-                    variant="outline-danger"
+                    variant="outline-secondary"
                     style="margin:0px;"
                     v-if="form.showTotalNumbers == false"
                     @click="
@@ -601,6 +601,7 @@ export default {
       alertcolor: "",
       dismissSecs: 5,
       dismissCountDown: 0,
+      unsubscribe: null,
     };
   },
   props: ["dir", "ta", "ur", "lang"],
@@ -650,6 +651,7 @@ export default {
       //   next(false);
       // }
     } else {
+      this.unsubscribe();
       next();
     }
   },
@@ -659,8 +661,22 @@ export default {
       this.$router.push({ name: this.pathtogo, query: {} });
     },
     convertphone(payload) {
-      this.form.phoneNumber = payload.phoneNumber;
-      this.form.formattedNumber = payload.formattedNumber;
+      // this.form.phoneNumber = payload.phoneNumber;
+      // this.form.formattedNumber = payload.formattedNumber;
+      if (payload.phoneNumber) {
+        if (payload.phoneNumber.length == 9) {
+          this.form.phoneNumber = "0" + payload.phoneNumber;
+        } else {
+          this.form.phoneNumber = payload.phoneNumber;
+        }
+      } else {
+        this.form.phoneNumber = null;
+      }
+      if (payload.formattedNumber) {
+        this.form.formattedNumber = payload.formattedNumber;
+      } else {
+        this.form.formattedNumber = null;
+      }
     },
     savefilepath(arrayofpaths) {
       var filepath = arrayofpaths[arrayofpaths.length - 1];
@@ -708,7 +724,7 @@ export default {
                         this.alertmsg = docRef.translated.ar;
                         this.alertcolor = "danger";
                         this.showAlert();
-                      }, 3000);
+                      }, 5000);
                     });
                   //End Translated error
                 });
@@ -740,7 +756,7 @@ export default {
                           .doc(docRef.id)
                           .delete();
                       });
-                  }, 3000);
+                  }, 5000);
                 });
               //End Translated error
             });
@@ -919,7 +935,7 @@ export default {
                           .doc(docRef.id)
                           .delete();
                       });
-                  }, 3000);
+                  }, 5000);
                 });
               //End Translated error
             });
@@ -948,7 +964,7 @@ export default {
                       .doc(docRef.id)
                       .delete();
                   });
-              }, 3000);
+              }, 5000);
             });
           //End Translated error
         });
@@ -1028,7 +1044,7 @@ export default {
 
                 return output;
               });
-          }, 4500);
+          }, 10000);
         });
       //End Translatation
     },
@@ -1100,12 +1116,14 @@ export default {
     }
 
     //Get possible service types
-    db.collection("categories").onSnapshot((querySnapshot) => {
-      this.servicetype = [];
-      querySnapshot.forEach((doc) => {
-        this.servicetypes.push(doc.data());
+    this.unsubscribe = db
+      .collection("categories")
+      .onSnapshot((querySnapshot) => {
+        this.servicetype = [];
+        querySnapshot.forEach((doc) => {
+          this.servicetypes.push(doc.data());
+        });
       });
-    });
   },
 };
 </script>
